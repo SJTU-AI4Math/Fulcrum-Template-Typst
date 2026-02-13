@@ -1,9 +1,19 @@
-#let Fulcrum(body) = {
+#let ApplyBold = it => {
+  set text(font: ("New Computer Modern", "SimHei"), weight: "bold")
+  it
+}
+
+#let FulcrumCN(body) = {
   // 设置字体
 
   set heading(numbering: "1.1.")
   set text(font: ("New Computer Modern", "SimSun"), size: 11pt)
-  show strong: set text(font: ("New Computer Modern", "SimHei"), weight: "bold")
+  set par(first-line-indent: 2em)
+  set enum(indent: 2em)
+  set figure(supplement: [图])
+  show heading: ApplyBold
+  show strong: ApplyBold
+  show link: set text(weight: "regular", fill: rgb("#000080"))
 
   body
 }
