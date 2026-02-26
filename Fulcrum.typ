@@ -10,6 +10,7 @@
   set text(font: ("New Computer Modern", "SimSun"), size: 11pt)
   set par(first-line-indent: 2em)
   set enum(indent: 2em)
+  set list(indent: 2em)
   set figure(supplement: [图])
   show heading: ApplyBold
   show strong: ApplyBold
@@ -74,13 +75,22 @@
         #v(-5pt)
         #body
       ] else [
-        *#env: *#body
+        *#env#if (uuid != "") { label(uuid) }: *#body
       ],
     )
   }
 }
 
 // 定义命令
+
+// 约定
+#let 约定 = entry(
+  env: "约定",
+  counter_name: "variable",
+  color_stroke: rgb("#00B8A0"),
+  color_fill: rgb("#D0FFF1"),
+  default_inline: true,
+)
 
 // 公理
 #let 公理 = entry(
@@ -146,13 +156,13 @@
   title_en,
   hypotheses: (),
   hstyle: "inline",
-  target,
+  name,
   tstyle: "inline",
-  body,
+  content,
   bstyle: "inline",
   notation: [],
   nstyle: "inline",
-  isPremise: false,
+  isPredicate: false,
   extention: false,
 ) => {
   定义块(uuid: uuid, title_cn, title_en, extention: extention, {
@@ -169,15 +179,15 @@
     }
     // 目标
     if (tstyle == "display") {
-      [定义：#target]
+      [定义：#name]
     } else {
-      [定义【#target】]
+      [定义【#name】]
     }
     // 主体
     if (bstyle == "display") {
-      if (isPremise) [当且仅当] else [为] + body
+      if (isPredicate) [当且仅当] else [为] + content
     } else {
-      if (isPremise) [当且仅当] else [为] + body
+      if (isPredicate) [当且仅当] else [为] + content
     }
     // 记号
     if (notation != []) {
@@ -207,8 +217,8 @@
   hypotheses: (),
   extends: (),
   hstyle: "inline",
-  target,
-  body,
+  name,
+  content,
   extention: false,
 ) => {
   结构块(uuid: uuid, title_cn, title_en, extention: extention, [
@@ -222,11 +232,86 @@
       ]
     ]
     // 目标
-    定义【#target;】#if (extends != ()) [在#extends.join("，")的基础上额外]包含以下信息:
-    #enum(..body.map(member => [
+    定义【#name;】#if (extends != ()) [在#extends.join("，")的基础上额外]包含以下信息:
+    #enum(..content.map(member => [
       *#member.name#if ("name_en" in member) [（#member.name_en）]*#if ("varName" in member) [ $(#member.varName):$ ] else [：]#member.value；
     ]))
   ])
+}
+
+// 性质
+#let 性质块 = entry(
+  env: "性质",
+  counter_name: "property",
+  color_stroke: rgb("#AC00AF"),
+  color_fill: rgb("#FFEDFF"),
+)
+#let ppt = entry(
+  env: "Property",
+  counter_name: "property",
+  color_stroke: rgb("#AC00AF"),
+  color_fill: rgb("#FFEDFF"),
+)
+
+#let 性质 = (
+  uuid: "",
+  title_cn,
+  title_en,
+  hypotheses: (),
+  hstyle: "inline",
+  content,
+  bstyle: "inline",
+) => {
+  性质块(uuid: uuid, title_cn, title_en, {
+    if type(hypotheses) == "string" {
+      hypotheses = (hypotheses,)
+    }
+    // 假设
+    if (hypotheses.len() > 0) {
+      if (hstyle == "display") {
+        [设：#enum(..hypotheses.map(h => [#h；]))则：]
+      } else {
+        if (hypotheses.len() > 0) [设#hypotheses.join("，")，则：]
+      }
+    }
+    // 主体
+    if (bstyle == "display") {
+      content
+    } else {
+      content
+    }
+  })
+}
+
+#let 结构性质 = (
+  uuid: "",
+  title_cn,
+  title_en,
+  hypotheses: (),
+  hstyle: "inline",
+  content,
+  members: (),
+) => {
+  性质块(uuid: uuid, title_cn, title_en, {
+    if type(hypotheses) == "string" {
+      hypotheses = (hypotheses,)
+    }
+    // 假设
+    if (hypotheses.len() > 0) {
+      if (hstyle == "display") {
+        [设：#enum(..hypotheses.map(h => [#h；]))则：]
+      } else {
+        if (hypotheses.len() > 0) [设#hypotheses.join("，")，则：]
+      }
+    }
+    // 主体
+    [#content#if (members.len() > 0) [，其中：] else [。]]
+    if (members.len() > 0) [
+      #enum(..members.map(member => [
+        *#member.name#if ("name_en" in member) [（#member.name_en）]*#if ("varName" in member) [ $(#member.varName):$ ] else [：]#member.value；
+      ]))
+    ]
+  })
 }
 
 // 定理
