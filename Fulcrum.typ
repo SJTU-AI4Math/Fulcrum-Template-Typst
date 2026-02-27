@@ -84,13 +84,13 @@
 // 定义命令
 
 // 约定
-#let 约定 = entry(
+#let 约定 = (uuid: "", body) => entry(
   env: "约定",
   counter_name: "variable",
   color_stroke: rgb("#00B8A0"),
   color_fill: rgb("#D0FFF1"),
   default_inline: true,
-)
+)(uuid: uuid, "", "", body)
 
 // 公理
 #let 公理 = entry(
@@ -342,14 +342,36 @@
   color_fill: rgb("#EFDFFF"),
 )
 
+#let remark_visible = state("remark_visible", true)
+
+#let showRemark = context {
+  remark_visible.update(true)
+  []
+}
+#let hideRemark = context {
+  remark_visible.update(false)
+  []
+}
+
 // 注
-#let 注 = entry(
-  env: "注",
-  counter_name: "remark",
-  color_stroke: rgb("#E07B00"),
-  color_fill: rgb("#FFEBD2"),
-  default_inline: true,
-)
+#let 注 = (
+  uuid: "",
+  title_cn: "",
+  title_en: "",
+  body,
+  inline: true,
+  extention: false
+) => {
+  context if (remark_visible.get() == true) {
+    entry(
+      env: "注",
+      counter_name: "remark",
+      color_stroke: rgb("#E07B00"),
+      color_fill: rgb("#FFEBD2"),
+      default_inline: true,
+    )(uuid: uuid, title_cn, title_en, body, inline: inline, extention: extention)
+  }
+}
 #let rmk = entry(
   env: "Remark",
   counter_name: "remark",
