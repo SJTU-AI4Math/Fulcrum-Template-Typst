@@ -185,7 +185,7 @@
     }
     // 主体
     if (bstyle == "display") {
-      if (isPredicate) [当且仅当] else [为] + content
+      if (isPredicate) [当且仅当：] else [为：] + content
     } else {
       if (isPredicate) [当且仅当] else [为] + content
     }
@@ -220,6 +220,7 @@
   name,
   content,
   extention: false,
+  isPredicate: false,
 ) => {
   结构块(uuid: uuid, title_cn, title_en, extention: extention, [
     // 假设
@@ -232,7 +233,7 @@
       ]
     ]
     // 目标
-    定义【#name;】#if (extends != ()) [在#extends.join("，")的基础上额外]包含以下信息:
+    定义【#name;】#if (extends != ()) [在#extends.join("，")的基础上]#if (isPredicate) [当且仅当] else [包含以下信息]：
     #enum(..content.map(member => [
       *#member.name#if ("name_en" in member) [（#member.name_en）]*#if ("varName" in member) [ $(#member.varName):$ ] else [：]#member.value；
     ]))
