@@ -196,6 +196,35 @@
     if ((notation != [] and nstyle != "display") or (notation == [] and bstyle != "display")) [。]
   })
 }
+#let 实例 = (
+  uuid: "",
+  title_cn,
+  title_en,
+  hypotheses: (),
+  hstyle: "inline",
+  name,
+  content,
+  class,
+  extention: false,
+  isPredicate: false,
+) => {
+  定义块(uuid: uuid, title_cn, title_en, extention: extention, [
+    // 假设
+    #if (hypotheses.len() > 0) [
+      #if (hstyle == "display") [
+        设：
+        #enum(..hypotheses)
+      ] else [
+        #if (hypotheses.len() > 0) [设#hypotheses.join("，")，]
+      ]
+    ]
+    // 目标
+    定义【#name;】为携带以下信息的#class：
+    #enum(..content.map(member => [
+      *#member.name#if ("name_en" in member) [（#member.name_en）]*#if ("varName" in member) [ $(#member.varName):$ ] else [：]#member.value；
+    ]))
+  ])
+}
 
 // 结构
 #let 结构块 = entry(
@@ -262,8 +291,9 @@
   hstyle: "inline",
   content,
   bstyle: "inline",
+  extention: false, 
 ) => {
-  性质块(uuid: uuid, title_cn, title_en, {
+  性质块(uuid: uuid, title_cn, title_en, extention: extention, {
     if type(hypotheses) == "string" {
       hypotheses = (hypotheses,)
     }
@@ -279,7 +309,7 @@
     if (bstyle == "display") {
       content
     } else {
-      content
+      [#content;。]
     }
   })
 }
