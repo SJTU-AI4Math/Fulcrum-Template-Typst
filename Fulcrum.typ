@@ -3,7 +3,7 @@
   it
 }
 
-#let FulcrumCN(body) = {
+#let FulcrumCN = (body) => {
   // 设置字体
 
   set heading(numbering: "1.1.")
