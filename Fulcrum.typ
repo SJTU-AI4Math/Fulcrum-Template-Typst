@@ -13,7 +13,7 @@
   // 字体样式：西文使用 New Computer Modern，中文使用宋体
   set text(font: ("New Computer Modern", "SimSun"))
   // 首行缩进两个字符宽度
-  set par(first-line-indent: 2em)
+  set par(first-line-indent: (amount: 2em, all: true),)
   // 有序枚举缩进两个字符宽度
   set enum(indent: 2em)
   // 无序枚举缩进两个字符宽度
@@ -26,6 +26,26 @@
   show strong: ApplyBold
   // 超链接样式：深蓝色
   show link: set text(weight: "regular", fill: rgb("#000080"))
+  // 代码块
+  show raw.where(block: true): (body) => {
+    block(
+      fill: rgb("#EEEEEE"),
+      inset: 8pt,
+      radius: 4pt,
+      body
+    )
+  }
+  // 行内代码块
+  show raw.where(block: false): (body) => {
+    box(
+      fill: rgb("#EEEEEE"),
+      inset: 4pt,
+      radius: 4pt,
+      baseline: 4pt,
+      body
+    )
+  }
+  show title: (body) => [#align(center)[#ApplyBold(text(size: 1.5em, body))]]
 
   body
 }
@@ -48,10 +68,10 @@
     assert(false, message: "Error: type of argument `uuid` must be either `str` or `label`.")
   }
   context {
-    let elements = query(label(uuid))
+    let elements = query(l)
 
     if (elements.len() > 0) {
-      link(label(uuid))[#body]
+      link(l)[#body]
     } else if (url != "") {
       link(url)[#body]
     } else {
@@ -84,6 +104,9 @@
 
   // 返回条目函数
   (uuid: "", title_cn, title_en, body, inline: default_inline, extention: false) => {
+    // 覆盖全局首行缩进设置
+    set par(first-line-indent: 0em)
+
     if (not extention) { envCounter.step() } else { v(-1em) }
 
     block(
@@ -506,3 +529,35 @@
   color_fill: rgb("#FFEBD2"),
   default_inline: true,
 )
+
+#show: FulcrumCN
+
+= Examples
+
+== `#optionLink`
+
+This function is primarily designed for reference constants that may or may not have a labelled definition to refer to across different documents.
+
+*Code:*
+
+```typ
+Write a line of text labelled with `ExampleLabel`, <ExampleLabel>
+
+Create an #optionLink(<ExampleLabel>, "example constant") that links to a label if it exists. 
+
+And here is #optionLink(<InexistLabel>, "another constant") that does not find the label, so it just displays the text. 
+
+Moreover, you can create a #optionLink(<InexistLabel>, "constant with backup", url: "http://www.wikipedia.org") that links to a URL if the label does not exist. In this case it's Wikipedia homepage. 
+```
+
+*Output:*
+
+Write a line of text labelled with `ExampleLabel`, <ExampleLabel>
+
+Create an #optionLink(<ExampleLabel>, "example constant") that links to a label if it exists. 
+
+And here is #optionLink(<InexistLabel>, "another constant") that does not find the label, so it just displays the text. 
+
+Moreover, you can create a #optionLink(<InexistLabel>, "constant with backup", url: "http://www.wikipedia.org") that links to a URL if the label does not exist. In this case it's Wikipedia homepage. 
+
+== `#entry`
