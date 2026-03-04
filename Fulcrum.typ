@@ -354,7 +354,7 @@
     // 目标
     定义【#name;】#if (extends != ()) [在#extends.join("，")的基础上]#if (isPredicate) [当且仅当] else [包含以下信息]：
     #enum(..content.map(member => [
-      *#member.name#if ("name_en" in member) [（#member.name_en）]*#if ("varName" in member) [ $(#member.varName):$ ] else [：]#member.value；
+      *#member.name#if ("name_en" in member) [（#member.name_en）]*#if ("varName" in member) [ $(#member.varName : #member.value)$ ] else [：#member.value]#if (not ("style" in member and member.style == "display")) [；]
     ]))
     #if (notation != []) [
       #if (nstyle == "display") [记作：#notation] else [记作：#notation。]
