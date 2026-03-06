@@ -80,6 +80,14 @@
   }
 }
 
+/// “令 ... 为 ...” 语言
+#let 令 = (varName, type: [], value) => {
+  [#optionLink("TypeLet", [令]) #varName]
+  if (type != []) [ $:#type$]
+  [ 为 #value]
+}
+
+
 /// 通用条目生成函数。返回一个函数，用于创建带编号、配色的条目块
 /// - `env : str` <可选> 条目类型名称，如"定义"、"定理"等，默认"条目"
 /// - `counter_name : str` <可选> 计数器名称，用于编号，默认与 env 相同
@@ -255,7 +263,7 @@
     }
     // 记号
     if (notation != []) {
-      if (nstyle == "display") [记作：#notation] else [，记作：#notation]
+      if (bstyle == "display") [记作：#notation] else [，记作：#notation]
     }
     if ((notation != [] and nstyle != "display") or (notation == [] and bstyle != "display")) [。]
   })
