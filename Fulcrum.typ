@@ -39,6 +39,8 @@
   set list(indent: 2em)
   // 图片编号规则为“图1”
   set figure(supplement: [图])
+  //
+  set math.mat(delim: "[")
   // 章节标题加粗
   show heading: ApplyBold
   // 普通加粗
@@ -75,7 +77,7 @@
 }
 
 #let allowQuery = state("allowQuery", true)
-#let 关闭索引 = allowQuery.update(false)
+// #allowQuery.update(false)
 
 /// 索引创建函数。如果存在标签则链接到标签，否则链接到 URL，若都无则显示纯文本
 /// 1. `uuid : str | label` 索引指向的 uuid
@@ -102,7 +104,7 @@
   }
   context {
     // 查找标签是否在文档中存在
-    let elements
+    let elements = ()
     if (allowQuery.get()){
       elements = query(l)
     } else {
@@ -143,7 +145,7 @@
   color_stroke: rgb("#000000"),
   color_fill: rgb("#DDDDDD"),
   parentEntry: "",
-  default_inline: false,
+  style: "full",
 ) = {
   // 若不指定计数器名称，以环境为名创建计数器
   if (counter_name == "") {
@@ -157,9 +159,10 @@
     title_cn,
     title_en,
     body,
-    inline: default_inline,
+    style: style,
     extention: false,
     contributors: (),
+    count: none,
   ) => {
     // 覆盖全局格式，清空首行缩进
     set par(first-line-indent: 0em)
@@ -170,6 +173,10 @@
       }
       
     })
+
+    if(count != none and type(count) == int) {
+      envCounter.update(count - 1)
+    }
 
     if (not extention) {
       // 更新计数器
@@ -183,15 +190,16 @@
     block(
       fill: color_fill,
       inset: (x: 12pt, y: 8pt),
-      stroke: (left: 3pt + color_stroke),
+      stroke: if (style != "proof") {(left: 3pt + color_stroke)} else {(left: 3pt + color_stroke, y: 1pt + color_stroke)},
       width: 100%,
       spacing: 1em,
       {
-        if (inline) {
+        if (style in ("remark", "proof", "problem")) {
           // 单行块
           strong({
-            [#env #if (uuid != "") { label(uuid) }]
-            [: ]
+            [#env#if (uuid != "") { label(uuid) }]
+            if (style == "problem") {context envCounter.get().at(0)}
+            [：]
           })
           body
         } else {
@@ -204,7 +212,7 @@
                   [#counter(parentEntry).get().at(0)]
                 } + envCounter.get().at(0)
                 let levels = counter(heading).display()
-                if (levels != "0") { [#levels#num] } else { [#num] }
+                if (levels != "0.") { [#levels#num] } else { [#num] }
               }
               [:]
             } else [#v(-5pt)#line(length: 100%, stroke: 0.5pt + color_stroke)#v(-5pt)#env：]
@@ -249,7 +257,7 @@
     counter_name: "variable",
     color_stroke: rgb("#00B8A0"),
     color_fill: rgb("#D0FFF1"),
-    default_inline: true,
+    style: "remark",
   )(uuid: uuid, "", "", b)
 }
 
@@ -265,8 +273,9 @@
     if (hstyle == "display") {
       [设：#enum(..hypotheses.map(h => [#h；]))]
     } else {
-      if (hypotheses.len() > 0) [设#hypotheses.join("，")，]
+      if (hypotheses.len() > 0) [设#hypotheses.join("，")]
     }
+    [，]
   }
 }
 
@@ -274,15 +283,10 @@
 #let cRender = (
   hasHyp,
   conclusion,
-  hstyle,
   cstyle,
 ) => {
   if (hasHyp) {
-    if (hstyle == "display") {
-      [则]
-    } else {
-      [，则]
-    }
+    [则]
     if (cstyle == "display") {
       [：]
     }
@@ -305,7 +309,12 @@
     })
     // 变量名与值
     if ("varName" in member) {
-      $(#member.varName : #member.value)$
+      if ("type" in member) {
+        $(#member.varName : #member.type) :=$
+        member.value
+      } else {
+        $(#member.varName : #member.value)$
+      }
     } else {
       [：]
       member.value
@@ -394,7 +403,7 @@
   target,
   value,
   uuid: "",
-  isExtention: false,
+  isExtension: false,
   isPredicate: false,
   hypotheses: (),
   notation: [],
@@ -403,8 +412,16 @@
   bstyle: "inline",
   nstyle: "inline",
   contributors: (),
+  // 下面这个废除
+  isExtention: false,
 ) => {
-  定义块(uuid: uuid, title_cn, title_en, extention: isExtention, contributors: contributors, {
+  // Deprecation
+  if (isExtention) {
+    isExtension = true
+    WarningMessage.update([Warning (in command `定义`): argument `isExtention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+  }
+
+  定义块(uuid: uuid, title_cn, title_en, extention: isExtension, contributors: contributors, {
     // 假设
     hRender(hypotheses, hstyle)
     // 目标
@@ -446,8 +463,8 @@
   hypotheses: (),
   hstyle: "inline",
   target,
-  content,
   class,
+  members,
   extention: false,
   isPredicate: false,
   contributors: (),
@@ -457,13 +474,11 @@
     hRender(hypotheses, hstyle)
     // 目标
     [定义【]
-    name
+    target
     [】为携带以下信息的]
     class
     [：]
-    enum(..content.map(member => [
-      *#member.name#if ("name_en" in member) [（#member.name_en）]*#if ("varName" in member) [ $(#member.varName):$ ] else [：]#member.value；
-    ]))
+    mRender(members)
   })
 }
 
@@ -555,15 +570,16 @@
   // 下面这个废除
   bstyle: "WARNING", 
 ) => {
+  // Deprecation
+  if (bstyle != "WARNING") {
+    cstyle = bstyle
+    WarningMessage.update([Warning (in command `性质`): argument `bstyle` is deprecated and will be removed in future versions. Please use `cstyle` instead.])
+  }
   性质块(uuid: uuid, title_cn, title_en, extention: extention, contributors: contributors, {
     // 假设
     hRender(hypotheses, hstyle)
     // 结论
-    cRender(hypotheses != (), conclusion, hstyle, bstyle)
-    // 废除警告
-    if (bstyle != "WARNING") {
-      WarningMessage.update([Warning (in command `性质`): argument `bstyle` is deprecated and will be removed in future versions. Please use `cstyle` instead.])
-    }
+    cRender(hypotheses != (), conclusion, cstyle)
   })
 }
 
@@ -636,7 +652,7 @@
     // 假设
     hRender(hypotheses, hstyle)
     // 结论
-    cRender(hypotheses != (), conclusion, hstyle, cstyle)
+    cRender(hypotheses != (), conclusion, cstyle)
   })
 }
 #let 引理块 = entry(
@@ -674,7 +690,7 @@
     // 假设
     hRender(hypotheses, hstyle)
     // 结论
-    cRender(hypotheses != (), conclusion, hstyle, cstyle)
+    cRender(hypotheses != (), conclusion, cstyle)
   })
 }
 
@@ -729,10 +745,108 @@
       counter_name: "remark",
       color_stroke: rgb("#E07B00"),
       color_fill: rgb("#FFEBD2"),
-      default_inline: true,
-    )(uuid: uuid, title_cn, title_en, body, inline: inline, extention: extention)
+      style: "remark",
+    )(uuid: uuid, title_cn, title_en, body, style: "remark", extention: extention)
   }
 }
+
+// 作业用
+
+#let 题目 = (uuid : "", count: none, body) => {
+  entry(
+    env: "题目",
+    counter_name: "problem",
+    color_stroke: rgb("#005B9C"),
+    color_fill: rgb("#DAF0FF"),
+    style: "problem",
+  )(
+    uuid: uuid,
+    "", 
+    "",
+    count: count,
+    body
+  )
+}
+
+
+#let 解答 = (body) => entry(
+  env: "解答",
+  counter_name: "solution",
+  color_stroke: rgb("#787878"),
+  color_fill: rgb("#E9E9E9"),
+  style: "remark"
+)(
+  "",
+  "",
+  body
+)
+
+// CNL 证明
+
+#let 证明块 = entry(
+  env: "证明",
+  counter_name: "proof",
+  color_stroke: rgb("#787878"),
+  color_fill: rgb("#E9E9E9"),
+  style: "proof"
+)
+
+#let 证明 = (
+  uuid: "",
+  body
+) => {
+  证明块(
+    uuid: uuid,
+    "",
+    "",
+  )[#body]
+}
+
+#let 构造块 = entry(
+  env: "构造",
+  counter_name: "construction",
+  color_stroke: rgb("#787878"),
+  color_fill: rgb("#E9E9E9"),
+  style: "proof"
+)
+
+#let 构造 = (
+  uuid: "",
+  body
+) => {
+  构造块(
+    uuid: uuid,
+    "",
+    "",
+  )[#body]
+}
+
+// CNL
+
+#let 目标 = (name: [], goal, c: false) => {
+  [*【目标*]
+  if (name != []) {
+    [*（#name）*]
+  }
+  [】]
+  if (c) {
+    [需构造：]
+  } else {
+    [需证：]
+  }
+  goal
+}
+
+#let unfold = (defs) => {
+  [展开定义：#defs。]
+}
+#let apply = (premise) => {
+  [由#premise，]
+}
+#let have = (body) => [有：] + body
+#let rfl = [依定义相等。]
+#let sorry = text(fill: red)[`sorry`]
+#let QED = place(bottom + right)[$square$]
 
 // English
 
@@ -783,7 +897,7 @@
   counter_name: "remark",
   color_stroke: rgb("#E07B00"),
   color_fill: rgb("#FFEBD2"),
-  default_inline: true,
+  style: "remark",
 )
 
 #show: FulcrumCN
