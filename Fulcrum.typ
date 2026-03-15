@@ -68,7 +68,7 @@
       body
     )
   }
-  show title: (body) => [#align(center)[#ApplyBold(text(size: 1.5em, body))]]
+  show title: (body) => [#align(center)[#ApplyBold(text(body))]]
 
   // 全局警告信息渲染
   set page(header: WarningRender)
