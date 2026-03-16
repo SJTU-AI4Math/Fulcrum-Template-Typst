@@ -235,12 +235,9 @@
                   if (levels != "0.") { [#levels#num] } else { [#num] }
                 } else {count}
               }
-              [:]
+              [：]
             } else [#v(-5pt)#line(length: 100%, stroke: 0.5pt + color_stroke)#v(-5pt)#env：]
-            [
-              #title_cn
-              #if (uuid != "") { label(uuid) }
-            ]
+            [#title_cn#if (uuid != "") { label(uuid) }]
             if title_en != "" { "（" + title_en + "）" }
           })
           v(-5pt)
