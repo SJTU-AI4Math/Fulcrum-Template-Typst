@@ -211,6 +211,8 @@
       v(-1em)
     }
 
+    count = context envCounter.get().at(0)
+
     // 条目块
     block(
       fill: color_fill,
@@ -223,7 +225,7 @@
           // 单行块
           strong({
             [#env#if (uuid != "") { label(uuid) }]
-            if (count != none) {count}
+            if (count != none) [#count]
             [：]
           })
           body
