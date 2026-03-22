@@ -24,6 +24,12 @@
   body
 }
 
+#let rawLangColorMap = (
+  JavaScript: rgb("#808000"),
+  TypeScript: rgb("#008000"),
+  Lean: blue,
+)
+
 /// 显示设置，通过 `#show : FulcrumCN` 启用。配置中文排版样式（字体、缩进、编号等）
 /// - `body : content` <#1> 文档正文内容
 #let FulcrumCN = (body) => {
@@ -45,17 +51,30 @@
   show heading: ApplyBold
   // 普通加粗
   show strong: ApplyBold
+  // 中文斜体：楷体
+  show emph: set text(font: "KaiTi")
   // 超链接样式：深蓝色
   show link: set text(weight: "regular", fill: rgb("#000080"))
   // 代码块
+  set raw(theme: "vscode-light-modern.tmTheme")
   show raw.where(block: true): (body) => {
+    let langColor = rgb("#606060")
+    if (body.lang in rawLangColorMap){
+      langColor = rawLangColorMap.at(body.lang)
+    }
     set text(font: ("Consolas", "SimHei"))
     block(
-      fill: rgb("#EEEEEE"),
+      fill: rgb("#FFFFFF"),
       inset: 8pt,
-      radius: 4pt,
-      body
-    )
+      stroke: (left: 3pt + langColor, y: 1pt + langColor),
+    )[
+      #v(-0.6em)
+      #align(left)[#text(weight: "bold", fill: langColor, body.lang)]
+      #v(-0.9em)
+      #line(length: 100%, stroke: 0.5pt + langColor)
+      #v(-0.5em)
+      #body
+    ]
   }
   // 行内代码块
   show raw.where(block: false): (body) => {
@@ -68,7 +87,7 @@
       body
     )
   }
-  show title: (body) => [#align(center)[#ApplyBold(text(size: 1.5em, body))]]
+  show title: (body) => [#align(center)[#ApplyBold(text(body))]]
 
   // 全局警告信息渲染
   set page(header: WarningRender)
@@ -204,7 +223,7 @@
           // 单行块
           strong({
             [#env#if (uuid != "") { label(uuid) }]
-            if (style == "problem") {context envCounter.get().at(0)}
+            if (count != none) {count}
             [：]
           })
           body
@@ -214,18 +233,17 @@
             if (not isExtension) {
               env
               context {
-                let num = if (parentEntry != "") {
-                  [#counter(parentEntry).get().at(0)]
-                } + envCounter.get().at(0)
-                let levels = counter(heading).display()
-                if (levels != "0.") { [#levels#num] } else { [#num] }
+                if (count == none) {
+                  let num = if (parentEntry != "") {
+                    [#counter(parentEntry).get().at(0)]
+                  } + envCounter.get().at(0)
+                  let levels = counter(heading).display()
+                  if (levels != "0.") { [#levels#num] } else { [#num] }
+                } else {count}
               }
-              [:]
+              [：]
             } else [#v(-5pt)#line(length: 100%, stroke: 0.5pt + color_stroke)#v(-5pt)#env：]
-            [
-              #title_cn
-              #if (uuid != "") { label(uuid) }
-            ]
+            [#title_cn#if (uuid != "") { label(uuid) }]
             if title_en != "" { "（" + title_en + "）" }
           })
           v(-5pt)
