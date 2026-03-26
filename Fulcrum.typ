@@ -179,10 +179,16 @@
     title_en,
     body,
     style: style,
-    extention: false,
+    isExtension: false,
+    extention: none,
     contributors: (),
     count: none,
   ) => {
+    if (extention != none) {
+      isExtension = extention
+      WarningMessage.update([Warning (in command `entry`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+    }
+
     // 覆盖全局格式，清空首行缩进
     set par(first-line-indent: 0em)
     counterList.update(prev => {
@@ -197,13 +203,15 @@
       envCounter.update(count - 1)
     }
 
-    if (not extention) {
+    if (not isExtension) {
       // 更新计数器
       envCounter.step()
     } else {
       // 与上一个条目衔接
       v(-1em)
     }
+
+    count = context envCounter.get().at(0)
 
     // 条目块
     block(
@@ -217,14 +225,14 @@
           // 单行块
           strong({
             [#env#if (uuid != "") { label(uuid) }]
-            if (count != none) {count}
+            if (count != none) [#count]
             [：]
           })
           body
         } else {
           // 正常块
           strong({
-            if (not extention) {
+            if (not isExtension) {
               env
               context {
                 if (count == none) {
@@ -279,12 +287,12 @@
   )(uuid: uuid, "", "", b)
 }
 
-/// Hypotheses 渲染函数
-#let hRender = (
+/// Clause: 假设子句
+#let ClauseHypotheses = (
   hypotheses,
   hstyle,
 ) => {
-  if type(hypotheses) == "string" {
+  if (type(hypotheses) == str or type(hypotheses) == content) {
     hypotheses = (hypotheses,)
   }
   if (hypotheses.len() > 0) {
@@ -297,15 +305,15 @@
   }
 }
 
-/// Conclusion 渲染函数
-#let cRender = (
+/// Clause: 结论子句
+#let ClauseConclusion = (
   hasHyp,
   conclusion,
   cstyle,
 ) => {
   if (hasHyp) {
     [则]
-    if (cstyle == "display") {
+    if (cstyle != "display") {
       [：]
     }
   }
@@ -317,8 +325,8 @@
   }
 }
 
-// Members 渲染函数
-#let mRender = (members) => {
+/// Clause: 成员子句
+#let ClauseMembers = (members) => {
   enum(..members.map(member => {
     // 成员名
     strong({
@@ -342,8 +350,8 @@
   }))
 }
 
-// Notation 渲染函数
-#let nRender = (
+/// Clause: 记号子句
+#let ClauseNotation = (
   notation,
   bstyle,
   nstyle,
@@ -352,6 +360,33 @@
     if (bstyle == "display") [记作：#notation] else [，记作：#notation]
   }
   if ((notation != [] and nstyle != "display") or (notation == [] and bstyle != "display")) [。]
+}
+
+/// Clause: 定义目标子句
+#let ClauseDefine = (
+  target,
+  tstyle: "inline",
+) => {
+  if (tstyle == "display") {
+    [定义：#target]
+  } else {
+    [定义【#target】]
+  }
+}
+
+/// Clause: “为” 子句（仅连接词）
+#let ClauseBe = (bstyle: "inline") => {
+  if (bstyle == "display") [为：] else [为]
+}
+
+/// Clause: “当且仅当” 子句（仅连接词）
+#let ClauseIff = (bstyle: "inline") => {
+  if (bstyle == "display") [当且仅当：] else [当且仅当]
+}
+
+/// Clause: “包含以下信息” 子句（仅连接词）
+#let ClauseContains = (bstyle: "display") => {
+  if (bstyle == "display") [包含以下信息：] else [包含以下信息]
 }
 
 // 公理
@@ -406,7 +441,7 @@
 /// 4. `value : content` 定义的主体内容
 /// *可选参数*：
 /// - `uuid : str` 定义的唯一标识符，用于链接引用
-/// - `extention : bool` 是否为扩展定义，默认 false
+/// - `isExtension : bool` 是否为扩展定义，默认 false
 /// - `isPredicate : bool` 是否为谓词定义，默认 false
 /// - `hypotheses : content | list` 假设内容
 /// - `notation : content` 定义的记号，默认空
@@ -431,31 +466,30 @@
   nstyle: "inline",
   contributors: (),
   // 下面这个废除
+  extention: none,
+  // 下面这个废除
   isExtention: false,
 ) => {
   // Deprecation
+  if (extention != none) {
+    isExtension = extention
+    WarningMessage.update([Warning (in command `定义`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+  }
+
   if (isExtention) {
     isExtension = true
     WarningMessage.update([Warning (in command `定义`): argument `isExtention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
   }
 
-  定义块(uuid: uuid, title_cn, title_en, extention: isExtension, contributors: contributors, {
+  定义块(uuid: uuid, title_cn, title_en, isExtension: isExtension, contributors: contributors, {
     // 假设
-    hRender(hypotheses, hstyle)
+    ClauseHypotheses(hypotheses, hstyle)
     // 目标
-    if (tstyle == "display") {
-      [定义：#target]
-    } else {
-      [定义【#target】]
-    }
+    ClauseDefine(target, tstyle: tstyle)
     // 目标
-    if (bstyle == "display") {
-      if (isPredicate) [当且仅当：] else [为：] + value
-    } else {
-      if (isPredicate) [当且仅当] else [为] + value
-    }
+    (if (isPredicate) { ClauseIff(bstyle: bstyle) } else { ClauseBe(bstyle: bstyle) }) + value
     // 记号
-    nRender(notation, bstyle, nstyle)
+    ClauseNotation(notation, bstyle, nstyle)
   })
 }
 
@@ -471,7 +505,7 @@
 /// - `uuid : str` 实例的唯一标识符，用于链接引用
 /// - `hypotheses : content | list` 假设内容
 /// - `hstyle : str` 假设显示样式，"inline" 或 "display"，默认 "inline"
-/// - `extention : bool` 是否为扩展实例，默认 false
+/// - `isExtension : bool` 是否为扩展实例，默认 false
 /// - `isPredicate : bool` 是否为谓词实例，默认 false
 /// - `contributors : list` 贡献者列表，用于显示在条目右下角，默认空
 #let 实例 = (
@@ -483,20 +517,27 @@
   target,
   class,
   members,
-  extention: false,
+  isExtension: false,
   isPredicate: false,
   contributors: (),
+  // 下面这个废除
+  extention: none,
 ) => {
-  定义块(uuid: uuid, title_cn, title_en, extention: extention, contributors: contributors, {
+  if (extention != none) {
+    isExtension = extention
+    WarningMessage.update([Warning (in command `实例`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+  }
+
+  定义块(uuid: uuid, title_cn, title_en, isExtension: isExtension, contributors: contributors, {
     // 假设
-    hRender(hypotheses, hstyle)
+    ClauseHypotheses(hypotheses, hstyle)
     // 目标
     [定义【]
     target
     [】为携带以下信息的]
     class
     [：]
-    mRender(members)
+    ClauseMembers(members)
   })
 }
 
@@ -520,7 +561,7 @@
 /// - `hypotheses : content | list` 假设内容
 /// - `extends : list` 继承的结构列表
 /// - `hstyle : str` 假设显示样式，"inline" 或 "display"，默认 "inline"
-/// - `extention : bool` 是否为扩展结构，默认 false
+/// - `isExtension : bool` 是否为扩展结构，默认 false
 /// - `isPredicate : bool` 是否为谓词结构，默认 false
 /// - `notation : content` 结构的记号，默认空
 /// - `nstyle : str` 记号显示样式，"inline" 或 "display"，默认 "inline"
@@ -534,23 +575,30 @@
   hstyle: "inline",
   target,
   members,
-  extention: false,
+  isExtension: false,
   isPredicate: false,
   notation: [],
   nstyle: "inline",
   contributors: (),
+  // 下面这个废除
+  extention: none,
 ) => {
-  结构块(uuid: uuid, title_cn, title_en, extention: extention, contributors: contributors, {
+  if (extention != none) {
+    isExtension = extention
+    WarningMessage.update([Warning (in command `结构`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+  }
+
+  结构块(uuid: uuid, title_cn, title_en, isExtension: isExtension, contributors: contributors, {
     // 假设
-    hRender(hypotheses, hstyle)
+    ClauseHypotheses(hypotheses, hstyle)
     // 目标
     [定义【#target;】]
     if (extends != ()) [在#extends.join("，")的基础上]
-    if (isPredicate) [当且仅当：] else [包含以下信息：]
+    if (isPredicate) [#ClauseIff(bstyle: "display")] else [#ClauseContains(bstyle: "display")]
     // 成员
-    mRender(members)
+    ClauseMembers(members)
     // 记号
-    nRender(notation, "display", nstyle)
+    ClauseNotation(notation, "display", nstyle)
   })
 }
 
@@ -573,7 +621,7 @@
 /// - `hypotheses : content | list` 假设内容
 /// - `hstyle : str` 假设显示样式，"inline" 或 "display"，默认 "inline"
 /// - `cstyle : str` 结论显示样式，"inline" 或 "display"，默认 "inline"
-/// - `extention : bool` 是否为扩展性质，默认 false
+/// - `isExtension : bool` 是否为扩展性质，默认 false
 /// - `contributors : list` 贡献者列表，用于显示在条目右下角，默认空
 #let 性质 = (
   uuid: "",
@@ -583,21 +631,28 @@
   hstyle: "inline",
   conclusion,
   cstyle: "inline",
-  extention: false,
+  isExtension: false,
   contributors: (),
+  // 下面这个废除
+  extention: none,
   // 下面这个废除
   bstyle: "WARNING", 
 ) => {
   // Deprecation
+  if (extention != none) {
+    isExtension = extention
+    WarningMessage.update([Warning (in command `性质`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+  }
+
   if (bstyle != "WARNING") {
     cstyle = bstyle
     WarningMessage.update([Warning (in command `性质`): argument `bstyle` is deprecated and will be removed in future versions. Please use `cstyle` instead.])
   }
-  性质块(uuid: uuid, title_cn, title_en, extention: extention, contributors: contributors, {
+  性质块(uuid: uuid, title_cn, title_en, isExtension: isExtension, contributors: contributors, {
     // 假设
-    hRender(hypotheses, hstyle)
+    ClauseHypotheses(hypotheses, hstyle)
     // 结论
-    cRender(hypotheses != (), conclusion, cstyle)
+    ClauseConclusion(hypotheses != (), conclusion, cstyle)
   })
 }
 
@@ -625,12 +680,12 @@
 ) => {
   性质块(uuid: uuid, title_cn, title_en, contributors: contributors, {
     // 假设
-    hRender(hypotheses, hstyle)
+    ClauseHypotheses(hypotheses, hstyle)
     // 主体
     content
     if (members.len() > 0) [，其中：] else [。]
     // 成员
-    mRender(members)
+    ClauseMembers(members)
   })
 }
 
@@ -653,7 +708,7 @@
 /// - `hypotheses : content | list` 假设内容
 /// - `hstyle : str` 假设显示样式，"inline" 或 "display"，默认 "inline"
 /// - `cstyle : str` 结论显示样式，"inline" 或 "display"，默认 "inline"
-/// - `extention : bool` 是否为扩展定理，默认 false
+/// - `isExtension : bool` 是否为扩展定理，默认 false
 /// - `contributors : list` 贡献者列表，用于显示在条目右下角，默认空
 #let 定理 = (
   uuid: "",
@@ -663,14 +718,21 @@
   hypotheses: (),
   hstyle: "inline",
   cstyle: "inline",
-  extention: false,
+  isExtension: false,
   contributors: (),
+  // 下面这个废除
+  extention: none,
 ) => {
-  定理块(uuid: uuid, title_cn, title_en, extention: extention, contributors: contributors, {
+  if (extention != none) {
+    isExtension = extention
+    WarningMessage.update([Warning (in command `定理`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+  }
+
+  定理块(uuid: uuid, title_cn, title_en, isExtension: isExtension, contributors: contributors, {
     // 假设
-    hRender(hypotheses, hstyle)
+    ClauseHypotheses(hypotheses, hstyle)
     // 结论
-    cRender(hypotheses != (), conclusion, cstyle)
+    ClauseConclusion(hypotheses != (), conclusion, cstyle)
   })
 }
 #let 引理块 = entry(
@@ -691,7 +753,7 @@
 /// - `hypotheses : content | list` 假设内容
 /// - `hstyle : str` 假设显示样式，"inline" 或 "display"，默认 "inline"
 /// - `cstyle : str` 结论显示样式，"inline" 或 "display"，默认 "inline"
-/// - `extention : bool` 是否为扩展引理，默认 false
+/// - `isExtension : bool` 是否为扩展引理，默认 false
 /// - `contributors : list` 贡献者列表，用于显示在条目右下角，默认空
 #let 引理 = (
   uuid: "",
@@ -701,14 +763,21 @@
   hypotheses: (),
   hstyle: "inline",
   cstyle: "inline",
-  extention: false,
+  isExtension: false,
   contributors: (),
+  // 下面这个废除
+  extention: none,
 ) => {
-  引理块(uuid: uuid, title_cn, title_en, extention: extention, contributors: contributors, {
+  if (extention != none) {
+    isExtension = extention
+    WarningMessage.update([Warning (in command `引理`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+  }
+
+  引理块(uuid: uuid, title_cn, title_en, isExtension: isExtension, contributors: contributors, {
     // 假设
-    hRender(hypotheses, hstyle)
+    ClauseHypotheses(hypotheses, hstyle)
     // 结论
-    cRender(hypotheses != (), conclusion, cstyle)
+    ClauseConclusion(hypotheses != (), conclusion, cstyle)
   })
 }
 
@@ -748,15 +817,22 @@
 /// - `title_en : str` <可选> 注的英文标题
 /// - `body : content` <#4 或可选> 注的内容
 /// - `inline : bool` <可选> 是否使用行内模式，默认 true
-/// - `extention : bool` <可选> 是否为扩展注，默认 false
+/// - `isExtension : bool` <可选> 是否为扩展注，默认 false
 #let 注 = (
   uuid: "",
   title_cn: "",
   title_en: "",
   body,
   inline: true,
-  extention: false
+  isExtension: false,
+  // 下面这个废除
+  extention: none,
 ) => {
+  if (extention != none) {
+    isExtension = extention
+    WarningMessage.update([Warning (in command `注`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
+  }
+
   context if (remark_visible.get() == true) {
     entry(
       env: "注",
@@ -764,7 +840,7 @@
       color_stroke: rgb("#E07B00"),
       color_fill: rgb("#FFEBD2"),
       style: "remark",
-    )(uuid: uuid, title_cn, title_en, body, style: "remark", extention: extention)
+    )(uuid: uuid, title_cn, title_en, body, style: "remark", isExtension: isExtension)
   }
 }
 
