@@ -52,7 +52,7 @@
   // 普通加粗
   show strong: ApplyBold
   // 中文斜体：楷体
-  show emph: set text(font: "KaiTi")
+  show emph: set text(font: ("KaiTi", "New Computer Modern Math"), style: "italic")
   // 超链接样式：深蓝色
   show link: set text(weight: "regular", fill: rgb("#000080"))
   // 代码块
