@@ -967,6 +967,7 @@
     count: none,
     isExtension: false,
     lean_name: "",
+    url: "",
   ) => {
     set par(first-line-indent: 0em)
     counterList.update(prev => {
@@ -992,6 +993,7 @@
           } else { v(-5pt); line(length: 100%, stroke: 0.5pt + color_stroke); v(-5pt); env + ": " }
           [#title#if (uuid != "") { label(uuid) }]
             if lean_name != "" { [ (#raw(lean_name))] }
+            if url != "" { [ #link(url)[↗]] }
         })
         v(-5pt)
         line(length: 100%, stroke: 0.5pt + color_stroke)
