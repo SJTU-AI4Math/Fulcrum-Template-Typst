@@ -966,6 +966,7 @@
     authors: (),
     count: none,
     isExtension: false,
+    lean_name: "",
   ) => {
     set par(first-line-indent: 0em)
     counterList.update(prev => {
@@ -990,6 +991,7 @@
             [: ]
           } else { v(-5pt); line(length: 100%, stroke: 0.5pt + color_stroke); v(-5pt); env + ": " }
           [#title#if (uuid != "") { label(uuid) }]
+            if lean_name != "" { [ (#raw(lean_name))] }
         })
         v(-5pt)
         line(length: 100%, stroke: 0.5pt + color_stroke)
@@ -1145,8 +1147,8 @@
 #let structure = entryEN(
   env: "Structure",
   counter_name: "definition",
-  color_stroke: rgb("#009C27"),
-  color_fill: rgb("#D6FEE0"),
+  color_stroke: rgb("#E07B00"),
+  color_fill: rgb("#FFF3E0"),
 )
 #let example = entryEN(
   env: "Example",
