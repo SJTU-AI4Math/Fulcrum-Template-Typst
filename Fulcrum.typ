@@ -1047,9 +1047,9 @@
       _meta([ is defined to hold when:])
     } else {
       _meta([", define "])
-      [“]
+      [\[]
       name
-      [”]
+      [\]]
       _meta([ as:])
     }
   } else {
@@ -1057,9 +1057,9 @@
       name
       _meta([ is defined to hold when:])
     } else {
-      _meta([Define “])
+      _meta([Define \[])
       name
-      [”]
+      [\]]
       _meta([ as:])
     }
   }
