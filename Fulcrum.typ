@@ -985,6 +985,7 @@
         strong({
           if (not isExtension) {
             env
+            [ ]
             cnt
             [: ]
           } else { v(-5pt); line(length: 100%, stroke: 0.5pt + color_stroke); v(-5pt); env + ": " }
@@ -1004,18 +1005,21 @@
   }
 }
 
+/// Meta-language keyword styling (deep green).
+#let _meta(body) = text(fill: rgb("#007030"), body)
+
 /// Render a CNL `declare` block inside a definition entry.
-/// Produces natural-language output of the form:
+/// Output format:
 ///
-///   Let <h1>, <h2>, ..., [<name> : <type>,] define "<name>" as:
+///   Let <h1>, <h2>, ...[, <name> : <type>] define "<name>" as:
 ///     <body>
-///   [denoted by "<notation>".]
+///   [Denoted by <notation>.]
 ///
 /// Parameters:
 ///   hypotheses : array of content  (default: ())
 ///   type       : content           (default: none — omitted if none)
-///   name       : content           (the object being defined, positional #1)
-///   body       : content           (the definiens, positional #2)
+///   name       : content           (positional #1, the object being defined)
+///   body       : content           (positional #2, the definiens)
 ///   notation   : content           (default: none — omitted if none)
 ///   isPredicate: bool              (default: false)
 ///   bstyle     : "inline"|"display" (default: "display")
@@ -1028,29 +1032,35 @@
   name,
   body,
 ) = {
-  // --- hypothesis line ---
+  // --- hypothesis + intro line ---
+  let q = sym.quote.double.l  // use proper quote char
   let hyp_parts = ()
   for h in hypotheses { hyp_parts.push(h) }
-  if (type != none) { hyp_parts.push([#name : #type]) }
+  if (type != none) { hyp_parts.push([#name #_meta([:]) #type]) }
 
   if (hyp_parts.len() > 0) {
-    [Let ]
-    hyp_parts.join[", "]
-    if isPredicate { [", #name is defined to hold when:"] }
-    else { [", define "]
-      strong(["])
+    _meta([Let ])
+    hyp_parts.join(", ")
+    if isPredicate {
+      _meta([, ])
       name
-      strong(["])
-      [" as:"]
+      _meta([ is defined to hold when:])
+    } else {
+      _meta([", define "])
+      [“]
+      name
+      [”]
+      _meta([ as:])
     }
   } else {
-    if isPredicate { [#name is defined to hold when:] }
-    else {
-      [Define ]
-      strong(["])
+    if isPredicate {
       name
-      strong(["])
-      [ as:]
+      _meta([ is defined to hold when:])
+    } else {
+      _meta([Define “])
+      name
+      [”]
+      _meta([ as:])
     }
   }
 
@@ -1063,7 +1073,9 @@
 
   // --- notation ---
   if (notation != none) {
-    [Denoted by #notation.]
+    _meta([Denoted by ])
+    notation
+    [.]
   }
 }
 
