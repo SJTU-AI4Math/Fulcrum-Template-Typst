@@ -1042,25 +1042,23 @@
     _meta([Let ])
     hyp_parts.join(", ")
     if isPredicate {
-      _meta([, ])
+      _meta([, define (])
       name
-      _meta([ is defined to hold when:])
+      _meta([) iff:])
     } else {
-      _meta([", define "])
-      [\[]
+      _meta([, define (])
       name
-      [\]]
-      _meta([ as:])
+      _meta([) as:])
     }
   } else {
     if isPredicate {
+      _meta([Define (])
       name
-      _meta([ is defined to hold when:])
+      _meta([) iff:])
     } else {
-      _meta([Define \[])
+      _meta([Define (])
       name
-      [\]]
-      _meta([ as:])
+      _meta([) as:])
     }
   }
 
