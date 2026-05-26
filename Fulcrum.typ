@@ -1114,7 +1114,7 @@
   // --- field list ---
   enum(
     ..fields.map(((nat_name, lean_name, field_type)) => [
-      *#nat_name* (#raw(lean_name)) : $#field_type$
+      *#nat_name* (#raw(lean_name)) : #field_type
     ])
   )
 }
