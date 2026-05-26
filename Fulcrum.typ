@@ -1077,6 +1077,45 @@
   }
 }
 
+/// Render a CNL `structure_declare` block for a Lean `structure`.
+/// Output format:
+///
+///   Let <h1>, ..., define (<Name>) to be a type consisting of the following data:
+///   1. <Field name> (`lean_name`) : Type
+///   2. ...
+///
+/// Parameters:
+///   hypotheses : array of content   (default: ())
+///   fields     : array of 3-tuples  (natural_name, lean_name, type_content)
+///   name       : content            (positional #1, the structure being defined)
+#let structure_declare(
+  hypotheses: (),
+  fields: (),
+  name,
+) = {
+  // --- intro line ---
+  let hyp_parts = ()
+  for h in hypotheses { hyp_parts.push(h) }
+
+  if (hyp_parts.len() > 0) {
+    _meta([Let ])
+    hyp_parts.join(", ")
+    _meta([", define ("])
+    name
+    _meta([) to be a type consisting of the following data:])
+  } else {
+    _meta([Define (])
+    name
+    _meta([) to be a type consisting of the following data:])
+  }
+
+  // --- field list ---
+  enum(
+    ..fields.map(((nat_name, lean_name, field_type)) => [
+      *#nat_name* (#raw(lean_name)) : $#field_type$
+    ])
+  )
+}
 // English entry block instances
 
 #let definition = entryEN(
