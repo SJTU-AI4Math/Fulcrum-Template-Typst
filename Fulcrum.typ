@@ -942,7 +942,178 @@
 #let sorry = text(fill: red)[`sorry`]
 #let QED = place(bottom + right)[$square$]
 
-// English
+// ============================================================
+// English CNL Template
+// ============================================================
+
+/// English entry block factory.
+/// Unlike the CN `entry`, this uses a single `title` (no dual-language),
+/// and an `authors` list (default empty, no rendering yet).
+#let entryEN(
+  env: "Entry",
+  counter_name: "",
+  color_stroke: rgb("#000000"),
+  color_fill: rgb("#DDDDDD"),
+  style: "full",
+) = {
+  if (counter_name == "") { counter_name = env }
+  let envCounter = counter(counter_name)
+
+  (
+    uuid: "",
+    title,
+    body,
+    authors: (),
+    count: none,
+    isExtension: false,
+  ) => {
+    set par(first-line-indent: 0em)
+    counterList.update(prev => {
+      if ((prev == none) or (not counter_name in prev)) { prev + (counter_name,) }
+    })
+    if (count != none and type(count) == int) { envCounter.update(count - 1) }
+    if (not isExtension) { envCounter.step() } else { v(-1em) }
+    let cnt = context envCounter.get().at(0)
+
+    block(
+      fill: color_fill,
+      inset: (x: 12pt, y: 8pt),
+      stroke: (left: 3pt + color_stroke),
+      width: 100%,
+      spacing: 1em,
+      {
+        strong({
+          if (not isExtension) {
+            env
+            cnt
+            [: ]
+          } else { v(-5pt); line(length: 100%, stroke: 0.5pt + color_stroke); v(-5pt); env + ": " }
+          [#title#if (uuid != "") { label(uuid) }]
+        })
+        v(-5pt)
+        line(length: 100%, stroke: 0.5pt + color_stroke)
+        v(-5pt)
+        body
+        // authors: reserved for future rendering
+        place(bottom + right)[
+          #show link: set text(fill: white)
+          #text(fill: white, authors.join(", "))
+        ]
+      },
+    )
+  }
+}
+
+/// Render a CNL `declare` block inside a definition entry.
+/// Produces natural-language output of the form:
+///
+///   Let <h1>, <h2>, ..., [<name> : <type>,] define "<name>" as:
+///     <body>
+///   [denoted by "<notation>".]
+///
+/// Parameters:
+///   hypotheses : array of content  (default: ())
+///   type       : content           (default: none — omitted if none)
+///   name       : content           (the object being defined, positional #1)
+///   body       : content           (the definiens, positional #2)
+///   notation   : content           (default: none — omitted if none)
+///   isPredicate: bool              (default: false)
+///   bstyle     : "inline"|"display" (default: "display")
+#let declare(
+  hypotheses: (),
+  type: none,
+  notation: none,
+  isPredicate: false,
+  bstyle: "display",
+  name,
+  body,
+) = {
+  // --- hypothesis line ---
+  let hyp_parts = ()
+  for h in hypotheses { hyp_parts.push(h) }
+  if (type != none) { hyp_parts.push([#name : #type]) }
+
+  if (hyp_parts.len() > 0) {
+    [Let ]
+    hyp_parts.join[", "]
+    if isPredicate { [", #name is defined to hold when:"] }
+    else { [", define "]
+      strong(["])
+      name
+      strong(["])
+      [" as:"]
+    }
+  } else {
+    if isPredicate { [#name is defined to hold when:] }
+    else {
+      [Define ]
+      strong(["])
+      name
+      strong(["])
+      [ as:]
+    }
+  }
+
+  // --- body ---
+  if (bstyle == "display") {
+    block(inset: (left: 1.5em, y: 0.4em), body)
+  } else {
+    [ ] + body
+  }
+
+  // --- notation ---
+  if (notation != none) {
+    [Denoted by #notation.]
+  }
+}
+
+// English entry block instances
+
+#let definition = entryEN(
+  env: "Definition",
+  counter_name: "definition",
+  color_stroke: rgb("#009C27"),
+  color_fill: rgb("#D6FEE0"),
+)
+#let theorem = entryEN(
+  env: "Theorem",
+  counter_name: "theorem",
+  color_stroke: rgb("#005B9C"),
+  color_fill: rgb("#DAF0FF"),
+)
+#let lemma = entryEN(
+  env: "Lemma",
+  counter_name: "theorem",
+  color_stroke: rgb("#005B9C"),
+  color_fill: rgb("#DAF0FF"),
+)
+#let proposition = entryEN(
+  env: "Proposition",
+  counter_name: "theorem",
+  color_stroke: rgb("#005B9C"),
+  color_fill: rgb("#DAF0FF"),
+)
+#let structure = entryEN(
+  env: "Structure",
+  counter_name: "definition",
+  color_stroke: rgb("#009C27"),
+  color_fill: rgb("#D6FEE0"),
+)
+#let example = entryEN(
+  env: "Example",
+  counter_name: "example",
+  color_stroke: rgb("#7700E4"),
+  color_fill: rgb("#EFDFFF"),
+)
+#let remark = entryEN(
+  env: "Remark",
+  counter_name: "remark",
+  color_stroke: rgb("#E07B00"),
+  color_fill: rgb("#FFEBD2"),
+  style: "remark",
+)
+
+// Legacy English entry blocks (using CN entry, kept for compatibility)
 
 #let axm = entry(
   env: "Axiom",
