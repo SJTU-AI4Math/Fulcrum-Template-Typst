@@ -1161,10 +1161,31 @@
 #let remark = entryEN(
   env: "Remark",
   counter_name: "remark",
-  color_stroke: rgb("#E07B00"),
-  color_fill: rgb("#FFEBD2"),
+  color_stroke: rgb("#888888"),
+  color_fill: rgb("#00000000"),
   style: "remark",
 )
+
+/// Render a CNL theorem/proposition clause.
+/// Format (with hypotheses):   Let <h1>, ..., then <conclusion>.
+/// Format (without):            <conclusion>.
+#let theorem_declare(
+  hypotheses: (),
+  conclusion,
+) = {
+  let hyp_parts = ()
+  for h in hypotheses { hyp_parts.push(h) }
+  if (hyp_parts.len() > 0) {
+    _meta([Let ])
+    hyp_parts.join(", ")
+    _meta([, then ])
+    conclusion
+    [.]
+  } else {
+    conclusion
+    [.]
+  }
+}
 
 // Legacy English entry blocks (using CN entry, kept for compatibility)
 
