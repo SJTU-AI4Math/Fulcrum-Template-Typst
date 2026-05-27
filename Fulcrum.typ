@@ -1104,7 +1104,7 @@
   if (hyp_parts.len() > 0) {
     _meta([Let ])
     hyp_parts.join(", ")
-    _meta([", define ("])
+    _meta([, define (])
     name
     _meta([) to be a type consisting of the following data:])
   } else {
