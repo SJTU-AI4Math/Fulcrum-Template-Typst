@@ -1187,7 +1187,39 @@
   }
 }
 
-// Legacy English entry blocks (using CN entry, kept for compatibility)
+/// `#variable_block` — entry block for a section's implicit variables.
+/// Rendered with a light grey background to distinguish from mathematical content.
+#let variable_block = entryEN(
+  env: "Variables",
+  counter_name: "variable_block",
+  color_stroke: rgb("#888888"),
+  color_fill: rgb("#F5F5F5"),
+)
+
+/// `#instance_block` — entry block for a Lean typeclass instance.
+/// Use the `instance_declare` clause inside.
+#let instance_block = entryEN(
+  env: "Instance",
+  counter_name: "definition",
+  color_stroke: rgb("#009C27"),
+  color_fill: rgb("#D6FEE0"),
+)
+
+/// Render a CNL `instance_declare` clause.
+/// Format: <TypeClass>(<args>) on <Type>(<args>): <description>.
+#let instance_declare(
+  typeclass,
+  type_term,
+  description,
+) = {
+  _meta([Instance of ])
+  typeclass
+  _meta([ on ])
+  type_term
+  [: ]
+  description
+  [.]
+}
 
 #let axm = entry(
   env: "Axiom",
