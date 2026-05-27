@@ -1084,7 +1084,7 @@
 /// Render a CNL `structure_declare` block for a Lean `structure`.
 /// Output format:
 ///
-///   Let <h1>, ..., define (<Name>) to be a type consisting of the following data:
+///   [Let <h1>, ...,] define (<Name>) to be a type consisting of the following data:
 ///   1. <Field name> (`lean_name`) : Type
 ///   2. ...
 ///
