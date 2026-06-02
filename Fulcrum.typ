@@ -1187,6 +1187,19 @@
   }
 }
 
+/// `#doc_remark` — unnumbered grey block for Lean doc-string commentary.
+/// Use after a structure/definition block to add the Mathlib doc string
+/// in natural language. No title, no number, same grey as variable_block.
+/// Usage: #doc_remark[...]
+#let doc_remark = (body) => block(
+  fill: rgb("#F5F5F5"),
+  inset: (x: 12pt, y: 8pt),
+  stroke: (left: 3pt + rgb("#888888")),
+  width: 100%,
+  spacing: 1em,
+  body
+)
+
 /// `#variable_block` — entry block for a section's implicit variables.
 /// Rendered with a light grey background to distinguish from mathematical content.
 #let variable_block = entryEN(
