@@ -1219,28 +1219,49 @@
 )
 
 /// `#instance_block` — entry block for a Lean typeclass instance.
-/// Use the `instance_declare` clause inside.
+/// Use the `instance_declare` clause inside. Rendered in teal to make
+/// the typeclass-instance flavor visually distinct from plain definitions.
 #let instance_block = entryEN(
   env: "Instance",
   counter_name: "definition",
-  color_stroke: rgb("#009C27"),
-  color_fill: rgb("#D6FEE0"),
+  color_stroke: rgb("#00807A"),
+  color_fill: rgb("#D6F5F2"),
 )
 
 /// Render a CNL `instance_declare` clause.
-/// Format: <TypeClass>(<args>) on <Type>(<args>): <description>.
+/// Two styles are supported via the `style` argument:
+///
+///   * `"carries"` (default) — generic typeclass instance:
+///       "The <type_term> carries a <typeclass> structure, where: <body>."
+///
+///   * `"action"` — group/monoid action instance:
+///       "<typeclass> acts on <type_term> by: <body>."
+///
+/// `body` is free-form CNL: describe the structural operation on a
+/// generic element (e.g. "σ · T is the tableau whose entry at cell c
+/// is σ(T.entry c)").
 #let instance_declare(
   typeclass,
   type_term,
-  description,
+  body,
+  style: "carries",
 ) = {
-  _meta([Instance of ])
-  typeclass
-  _meta([ on ])
-  type_term
-  [: ]
-  description
-  [.]
+  if style == "action" {
+    typeclass
+    _meta([ acts on ])
+    type_term
+    _meta([ by: ])
+    body
+    [.]
+  } else {
+    _meta([The ])
+    type_term
+    _meta([ carries a ])
+    typeclass
+    _meta([ structure, where: ])
+    body
+    [.]
+  }
 }
 
 #let axm = entry(
