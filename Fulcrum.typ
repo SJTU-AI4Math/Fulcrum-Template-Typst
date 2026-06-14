@@ -1040,28 +1040,37 @@
   let q = sym.quote.double.l  // use proper quote char
   let hyp_parts = ()
   for h in hypotheses { hyp_parts.push(h) }
-  if (type != none) { hyp_parts.push([#name #_meta([:]) #type]) }
+
+  // The introduced symbol with its (optional) type annotation:
+  //   non-predicate + type   -> "name : type"  (inside the parenthesis after `define`)
+  //   predicate              -> just "name"    (the `iff` already signals it is a proposition)
+  //   non-predicate, no type -> just "name"
+  let intro = if (type != none and not isPredicate) {
+    [#name #_meta([:]) #type]
+  } else {
+    name
+  }
 
   if (hyp_parts.len() > 0) {
     _meta([Let ])
     hyp_parts.join(", ")
     if isPredicate {
       _meta([, define (])
-      name
+      intro
       _meta([) iff:])
     } else {
       _meta([, define (])
-      name
+      intro
       _meta([) as:])
     }
   } else {
     if isPredicate {
       _meta([Define (])
-      name
+      intro
       _meta([) iff:])
     } else {
       _meta([Define (])
-      name
+      intro
       _meta([) as:])
     }
   }
