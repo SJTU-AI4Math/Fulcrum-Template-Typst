@@ -1231,11 +1231,18 @@
 /// Render a CNL `instance_declare` clause.
 /// Two styles are supported via the `style` argument:
 ///
-///   * `"carries"` (default) — generic typeclass instance:
-///       "The <type_term> carries a <typeclass> structure, where: <body>."
+///   * `"carries"` (default) — generic typeclass instance. With hypotheses:
+///       "Let <h1>, ..., then <type_term> carries <typeclass> structure, where: <body>."
+///     Without hypotheses:
+///       "<type_term> carries <typeclass> structure, where: <body>."
 ///
 ///   * `"action"` — group/monoid action instance:
-///       "<typeclass> acts on <type_term> by: <body>."
+///       "Let <h1>, ..., <typeclass> acts on <type_term> by: <body>."
+///
+///   * `"is"` — the body itself is a NL phrase "is X" already (e.g.
+///     a CommRing predicate); produces "Let ..., <type_term> <body>."
+///     Useful when the natural reading does not match the carries/action
+///     templates.
 ///
 /// `body` is free-form CNL: describe the structural operation on a
 /// generic element (e.g. "σ · T is the tableau whose entry at cell c
@@ -1244,8 +1251,16 @@
   typeclass,
   type_term,
   body,
+  hypotheses: (),
   style: "carries",
 ) = {
+  let hyp_parts = ()
+  for h in hypotheses { hyp_parts.push(h) }
+  if (hyp_parts.len() > 0) {
+    _meta([Let ])
+    hyp_parts.join(", ")
+    _meta([, ])
+  }
   if style == "action" {
     typeclass
     _meta([ acts on ])
@@ -1253,15 +1268,64 @@
     _meta([ by: ])
     body
     [.]
-  } else {
-    _meta([The ])
+  } else if style == "is" {
     type_term
-    _meta([ carries a ])
+    [ ]
+    body
+    [.]
+  } else {
+    type_term
+    _meta([ is endowed with ])
     typeclass
-    _meta([ structure, where: ])
+    _meta([, where: ])
     body
     [.]
   }
+}
+
+/// Render a CNL `structure_instance_declare` block — used when a Lean term
+/// is itself an instance of a structure (e.g. the canonical map from a
+/// `StandardYoungTableau` to a `SemistandardYoungTableau` produces a value of
+/// the latter structure type).
+///
+/// Output format:
+///
+///   [Let <h1>, ...,] define (<name> : <type>) where:
+///   1. <field-1>
+///   2. <field-2>
+///   ...
+///
+/// Parameters:
+///   hypotheses : array of content   (default: ())
+///   type       : content            (the structure type the term inhabits)
+///   fields     : array of content   (one per structure field, free-form CNL)
+///   name       : content            (positional #1, the term being defined)
+#let structure_instance_declare(
+  hypotheses: (),
+  type: none,
+  fields: (),
+  name,
+) = {
+  let hyp_parts = ()
+  for h in hypotheses { hyp_parts.push(h) }
+
+  let intro = if (type != none) {
+    [#name #_meta([:]) #type]
+  } else { name }
+
+  if (hyp_parts.len() > 0) {
+    _meta([Let ])
+    hyp_parts.join(", ")
+    _meta([, define (])
+    intro
+    _meta([) where:])
+  } else {
+    _meta([Define (])
+    intro
+    _meta([) where:])
+  }
+
+  enum(..fields.map(f => [#f]))
 }
 
 #let axm = entry(
