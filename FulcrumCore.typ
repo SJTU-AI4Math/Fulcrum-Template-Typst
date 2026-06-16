@@ -273,6 +273,12 @@
       v(-1em)
     }
 
+    // main 条目 step 后 重置子计数器 为 0 (使下一个 sub 条目 从 j=1 起编)
+    if (count_mode == "main" and not isExtension) {
+      // 默认 sub counter 名为 "new_property_sub" (性质/推论 使用)
+      counter("new_property_sub").update(0)
+    }
+
     // 主条目 snapshot K 到 main_state, 同时 reset 子计数器 (重新从 0 起)
     if (count_mode == "main" and main_state != none and not isExtension) {
       context {

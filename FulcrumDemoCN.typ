@@ -63,6 +63,21 @@
 ]
 
 
+== 结构条目 (绿, 与定义/定理/引理合编 K)
+
+#结构条目("拓扑空间", "Topological Space")[
+  #结构子句(
+    主体: [拓扑空间],
+    成员: (
+      (name: [载体], value: $X$),
+      (name: [拓扑], value: [$tau subset 2^X$]),
+      (name: [公理], value: [$emptyset, X in tau$, $tau$ 对任意并与有限交封闭]),
+    ),
+    记号: $(X\, tau)$,
+  )
+]
+
+
 == 公理条目 (黄)
 
 #公理条目("选择公理", "Axiom of Choice")[
