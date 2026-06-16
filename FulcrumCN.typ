@@ -197,6 +197,7 @@
   bstyle: "inline",
   nstyle: "inline",
 ) => {
+  let _t = std.type
   assert(主体 != none, message: "定义子句: 参数 `主体` 必填")
   assert(内容 != none, message: "定义子句: 参数 `内容` 必填")
   let hyps = _normalize-hypotheses(条件)
@@ -239,6 +240,7 @@
   hstyle: "inline",
   tstyle: "inline",
 ) => {
+  let _t = std.type
   assert(主体 != none, message: "递归定义子句: 参数 `主体` 必填")
   assert(构造子 != none, message: "递归定义子句: 参数 `构造子` 必填")
   let hyps = _normalize-hypotheses(条件)
@@ -256,7 +258,7 @@
   enum(
     ..构造子.map(c => {
       // 兼容: dict 或 content
-      if (type(c) == dictionary) {
+      if (_t(c) == dictionary) {
         if ("type" in c and c.type != none) {
           [#strong(c.name) #h(0.2em)$:$#h(0.2em) #c.type]
         } else {
@@ -299,10 +301,11 @@
   hstyle: "inline",
   nstyle: "inline",
 ) => {
+  let _t = std.type
   assert(主体 != none, message: "结构子句: 参数 `主体` 必填")
   assert(成员 != none, message: "结构子句: 参数 `成员` 必填")
   let hyps = _normalize-hypotheses(条件)
-  let exts = if (type(继承) == str or type(继承) == content) { (继承,) } else { 继承 }
+  let exts = if (_t(继承) == str or _t(继承) == content) { (继承,) } else { 继承 }
   // 假设
   ClauseHypotheses(hyps, hstyle)
   // 目标
