@@ -1,6 +1,6 @@
-// FulcrumNew.typ
+// FulcrumCN.typ
 //
-// CNL 模板新版本(条目 + 子句分离架构)
+// 新中文 (new CN) CNL 模板: 条目 + 子句 二级分离架构。
 //
 // 设计原则:
 // 1. 条目命令(*条目)只管框: 颜色、标题、uuid、贡献者、计数器
@@ -30,7 +30,7 @@
 // ============================================================
 
 
-#import "Fulcrum.typ": (
+#import "FulcrumCore.typ": (
   entry,
   ClauseHypotheses,
   ClauseConclusion,
@@ -120,7 +120,7 @@
   env: "反例",
   counter_name: "counterexample",
   color_stroke: rgb("#D20022"),
-  color_fill: rgb("#FFE0E5"),
+  color_fill: rgb("#FFD6DC"),
 )
 
 /// 构造条目: 灰色 proof 风格 (与证明同色)
