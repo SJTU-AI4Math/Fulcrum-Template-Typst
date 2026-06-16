@@ -79,15 +79,12 @@
   color_fill: rgb("#DAF0FF"),
 )
 
-/// 推论条目: 紫色框, theorem counter
-///
-/// 颜色: 紫色 #9C27B0 (Material Design Purple 500)
-/// 与 性质 #AC00AF (品红) 和 例 #7700E4 (深紫) 形成同色系递变。
+/// 推论条目: 蓝色框 (同定理/引理), theorem counter
 #let 推论条目 = entry(
   env: "推论",
   counter_name: "theorem",
-  color_stroke: rgb("#9C27B0"),
-  color_fill: rgb("#F3E5F5"),
+  color_stroke: rgb("#005B9C"),
+  color_fill: rgb("#DAF0FF"),
 )
 
 /// 性质条目: 品红框, property counter

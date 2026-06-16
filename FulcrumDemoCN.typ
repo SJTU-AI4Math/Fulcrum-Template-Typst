@@ -90,7 +90,7 @@
 ]
 
 
-== 推论条目 (紫, 也用 theorem 计数器)
+== 推论条目 (蓝, 同定理/引理共享 theorem 计数器)
 
 #推论条目("特征零有限群表示完全可约", "Maschke (char-zero corollary)")[
   #定理子句(
