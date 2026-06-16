@@ -32,6 +32,8 @@
 
 #import "FulcrumCore.typ": (
   entry,
+  mainEntryNumber,
+  exampleEntryNumber,
   ClauseHypotheses,
   ClauseConclusion,
   ClauseMembers,
@@ -45,106 +47,135 @@
 
 // ============================================================
 // 1. 条目命令(*条目)— 只管框
+//
+// 计数规则:
+//   - 公理         → single (独立一级, 不带章节)
+//   - 定义 / 定理 / 引理  → main, counter "entry", 显示 章.节.K
+//   - 推论 / 性质      → sub, 读 mainEntryNumber, 不 step "entry"; sub counter "property_sub"; 显示 章.节.K.j
+//   - 例 / 反例      → main (各自), counter "example", 显示 章.节.M
+//   - 题目         → single, counter "problem", 显示 K (允许 number: 覆盖)
+//   - 注 / 构造 / 证明 / 解答  → none (不编号)
 // ============================================================
 
-/// 定义条目: 绿色框, definition counter
+/// 定义条目: 绿色框, 主条目 章.节.K (共享 counter "new_main")
 #let 定义条目 = entry(
   env: "定义",
-  counter_name: "definition",
+  counter_name: "new_main",
   color_stroke: rgb("#009C27"),
   color_fill: rgb("#D6FEE0"),
+  count_mode: "main",
+  main_state: mainEntryNumber,
 )
 
-/// 公理条目: 黄色框, axiom counter
+/// 公理条目: 黄色框, 独立一级编号
 #let 公理条目 = entry(
   env: "公理",
   counter_name: "axiom",
   color_stroke: rgb("#C1C103"),
   color_fill: rgb("#FFFFAC"),
+  count_mode: "single",
 )
 
-/// 引理条目: 蓝色框, theorem counter (与定理/推论共用)
+/// 引理条目: 蓝色框, 主条目 章.节.K (共享 counter "new_main" 与 定义/定理)
 #let 引理条目 = entry(
   env: "引理",
-  counter_name: "theorem",
+  counter_name: "new_main",
   color_stroke: rgb("#005B9C"),
   color_fill: rgb("#DAF0FF"),
+  count_mode: "main",
+  main_state: mainEntryNumber,
 )
 
-/// 定理条目: 蓝色框, theorem counter
+/// 定理条目: 蓝色框, 主条目 章.节.K (共享 counter "new_main")
 #let 定理条目 = entry(
   env: "定理",
-  counter_name: "theorem",
+  counter_name: "new_main",
   color_stroke: rgb("#005B9C"),
   color_fill: rgb("#DAF0FF"),
+  count_mode: "main",
+  main_state: mainEntryNumber,
 )
 
-/// 推论条目: 蓝色框 (同定理/引理), theorem counter
+/// 推论条目: 蓝色框 (同定理/引理), 子条目 章.节.K.j (不推升主 K)
 #let 推论条目 = entry(
   env: "推论",
-  counter_name: "theorem",
+  counter_name: "new_main",
   color_stroke: rgb("#005B9C"),
   color_fill: rgb("#DAF0FF"),
+  count_mode: "sub",
+  sub_parent_state: mainEntryNumber,
+  sub_counter_name: "new_property_sub",
 )
 
-/// 性质条目: 品红框, property counter
+/// 性质条目: 品红框, 子条目 章.节.K.j (不推升主 K)
 #let 性质条目 = entry(
   env: "性质",
-  counter_name: "property",
+  counter_name: "new_main",
   color_stroke: rgb("#AC00AF"),
   color_fill: rgb("#FFEDFF"),
+  count_mode: "sub",
+  sub_parent_state: mainEntryNumber,
+  sub_counter_name: "new_property_sub",
 )
 
-/// 注条目: 橙色 remark 风格(无背景色)
+/// 注条目: 橙色 remark 风格, 不编号
 #let 注条目 = entry(
   env: "注",
   counter_name: "remark",
   color_stroke: rgb("#E07B00"),
   color_fill: rgb("#FFEBD2"),
   style: "remark",
+  count_mode: "none",
 )
 
-/// 例条目: 紫色框, example counter
+/// 例条目: 紫色框, 主条目 章.节.M (共享 counter "new_example" 与 反例)
 #let 例条目 = entry(
   env: "例",
-  counter_name: "example",
+  counter_name: "new_example",
   color_stroke: rgb("#7700E4"),
   color_fill: rgb("#EFDFFF"),
+  count_mode: "main",
+  main_state: exampleEntryNumber,
 )
 
-/// 反例条目: 红色框, counterexample counter
+/// 反例条目: 红色框, 主条目 章.节.M (共享 counter "new_example")
 #let 反例条目 = entry(
   env: "反例",
-  counter_name: "counterexample",
+  counter_name: "new_example",
   color_stroke: rgb("#D20022"),
   color_fill: rgb("#FFD6DC"),
+  count_mode: "main",
+  main_state: exampleEntryNumber,
 )
 
-/// 构造条目: 灰色 proof 风格 (与证明同色)
+/// 构造条目: 灰色 proof 风格, 不编号
 #let 构造条目 = entry(
   env: "构造",
   counter_name: "construction",
   color_stroke: rgb("#787878"),
   color_fill: rgb("#F0F0F0"),
   style: "proof",
+  count_mode: "none",
 )
 
-/// 证明条目: 灰色 proof 风格
+/// 证明条目: 灰色 proof 风格, 不编号
 #let 证明条目 = entry(
   env: "证明",
   counter_name: "proof",
   color_stroke: rgb("#787878"),
   color_fill: rgb("#F0F0F0"),
   style: "proof",
+  count_mode: "none",
 )
 
-/// 题目条目: 蓝色 problem 风格
+/// 题目条目: 蓝色 problem 风格, 独立一级编号, 允许 number: 覆盖
 #let 题目条目 = entry(
   env: "题目",
   counter_name: "problem",
   color_stroke: rgb("#005B9C"),
   color_fill: rgb("#DAF0FF"),
   style: "problem",
+  count_mode: "single",
 )
 
 

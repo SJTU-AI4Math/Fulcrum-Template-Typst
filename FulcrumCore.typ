@@ -1,7 +1,7 @@
 // FulcrumCore.typ
 //
 // Internal core: 语言无关的通用基础设施。
-// 用户文档不要直接 import 本文件 — 始终走 Fulcrum.typ。
+// 用户文档不要直接 import 本文件 - 始终走 Fulcrum.typ。
 //
 // 本文件提供给三个语言子文件 (FulcrumEN.typ / FulcrumCN_old.typ / FulcrumCN.typ)
 // 共享的:
@@ -37,7 +37,7 @@
 
 #let counterList = state("counterList", ())
 
-/// 工具函数，适配中文宋体的加粗函数
+/// 工具函数,适配中文宋体的加粗函数
 
 // ============================================================
 // 2. 主题: ApplyBold + rawLangColorMap + FulcrumCN show-rule
@@ -57,9 +57,24 @@
 /// 显示设置，通过 `#show : FulcrumCN` 启用。配置中文排版样式（字体、缩进、编号等）
 /// - `body : content` <#1> 文档正文内容
 #let FulcrumCN = (body) => {
-  // 章节编号样式："1.1."
+  // 章节编号样式：“1.1.”
   set heading(numbering: "1.1.")
-  // 字体样式：西文使用 New Computer Modern，中文使用宋体
+  // 在每个 level-2 heading (== 节) 置位主条目/例反例 counter 重置到 0
+  // (使新节里 定义/定理 从 1 开始, 例/反例 从 1 开始)
+  show heading.where(level: 2): it => {
+    counter("new_main").update(0)
+    counter("new_example").update(0)
+    counter("new_property_sub").update(0)
+    it
+  }
+  // level-1 heading (= 章) 同样重置
+  show heading.where(level: 1): it => {
+    counter("new_main").update(0)
+    counter("new_example").update(0)
+    counter("new_property_sub").update(0)
+    it
+  }
+  // 字体样式:西文使用 New Computer Modern,中文使用宋体
   set text(font: ("New Computer Modern", "SimSun"))
   // 首行缩进两个字符宽度
   set par(first-line-indent: (amount: 2em, all: true),)
@@ -67,7 +82,7 @@
   set enum(indent: 2em)
   // 无序枚举缩进两个字符宽度
   set list(indent: 2em)
-  // 图片编号规则为“图1”
+  // 图片编号规则为"图1"
   set figure(supplement: [图])
   //
   set math.mat(delim: "[")
@@ -75,9 +90,9 @@
   show heading: ApplyBold
   // 普通加粗
   show strong: ApplyBold
-  // 中文斜体：楷体
+  // 中文斜体:楷体
   show emph: set text(font: ("KaiTi", "New Computer Modern Math"), style: "italic")
-  // 超链接样式：深蓝色
+  // 超链接样式:深蓝色
   show link: set text(weight: "regular", fill: rgb("#000080"))
   // 代码块
   set raw(theme: "vscode-light-modern.tmTheme")
@@ -126,10 +141,10 @@
 #let allowQuery = state("allowQuery", true)
 // #allowQuery.update(false)
 
-/// 索引创建函数。如果存在标签则链接到标签，否则链接到 URL，若都无则显示纯文本
+/// 索引创建函数。如果存在标签则链接到标签,否则链接到 URL,若都无则显示纯文本
 /// 1. `uuid : str | label` 索引指向的 uuid
 /// 2. `body : content` 索引显示的内容
-/// - `url : str` 索引指向的 URL，一般为维基百科
+/// - `url : str` 索引指向的 URL,一般为维基百科
 #let optionLink = (
   uuid,
   body,
@@ -159,10 +174,10 @@
     }
     // 视情况链接或显示纯文本
     if (elements.len() > 0) {
-      // 标签存在，链接到标签
+      // 标签存在,链接到标签
       link(l)[#body]
     } else if (url != "") {
-      // 标签不存在但 URL 不为空，链接到 URL
+      // 标签不存在但 URL 不为空,链接到 URL
       link(url)[#body]
     } else {
       // 显示纯文本
@@ -176,6 +191,11 @@
 // 4. 通用 entry 工厂
 // ============================================================
 
+// 子条目 "上一个主条目" 号码 snapshot
+// (子条目 如 性质/推论 读这个, 主条目 如 定义/定理 写这个)
+#let mainEntryNumber = state("mainEntryNumber", 0)
+#let exampleEntryNumber = state("exampleEntryNumber", 0)
+
 #let entry(
   env: "条目",
   counter_name: "",
@@ -183,12 +203,26 @@
   color_fill: rgb("#DDDDDD"),
   parentEntry: "",
   style: "full",
+  // 计数模式:
+  //   "legacy"  - 原生逻辑 (老命令 向后兼容). 显示 heading.display() + envCounter.
+  //   "main"    - 主条目. step counter, snapshot 到 main_state, 显示 章.节.K
+  //   "sub"     - 子条目. 不 step main, step 自己 sub counter, 读 main_state, 显示 章.节.K.j
+  //   "single"  - 独立一级编号. step counter, 不带章节, 显示 K. 允许 number: 覆盖.
+  //   "none"    - 不编号。
+  count_mode: "legacy",
+  // 仅 mode == "main" 时使用: 该主 counter 的 number snapshot state.
+  main_state: none,
+  // 仅 mode == "sub" 时使用: 读哪个 main_state 取 K.
+  sub_parent_state: none,
+  // 仅 mode == "sub" 时使用: sub counter 名称.
+  sub_counter_name: "",
 ) = {
-  // 若不指定计数器名称，以环境为名创建计数器
+  // 若不指定计数器名称,以环境为名创建计数器
   if (counter_name == "") {
     counter_name = env
   }
   let envCounter = counter(counter_name)
+  let subCounter = if (sub_counter_name != "") { counter(sub_counter_name) } else { none }
 
   // 返回条目函数
   (
@@ -201,32 +235,49 @@
     extention: none,
     contributors: (),
     count: none,
+    number: none,    // 面向 single 模式 的手动覆盖 (例如 题目 重编号)
   ) => {
     if (extention != none) {
       isExtension = extention
       WarningMessage.update([Warning (in command `entry`): argument `extention` is deprecated and will be removed in future versions. Please use `isExtension` instead.])
     }
 
-    // 覆盖全局格式，清空首行缩进
+    // 覆盖全局格式,清空首行缩进
     set par(first-line-indent: 0em)
     counterList.update(prev => {
-      
       if ((prev == none) or (not counter_name in prev)) {
         prev + (counter_name,)
       }
-      
     })
 
     if(count != none and type(count) == int) {
       envCounter.update(count - 1)
     }
 
+    // 新 number 参数 (single 模式 中 手动重编号)
+    if (number != none and count_mode == "single") {
+      envCounter.update(number - 1)
+    }
+
+    // 以 count_mode 驱动 step 逻辑
     if (not isExtension) {
-      // 更新计数器
-      envCounter.step()
+      if (count_mode == "legacy" or count_mode == "main" or count_mode == "single") {
+        envCounter.step()
+      } else if (count_mode == "sub") {
+        // 不 step main; step sub
+        if (subCounter != none) { subCounter.step() }
+      } else if (count_mode == "none") {
+        // 不 step 任何 counter
+      }
     } else {
-      // 与上一个条目衔接
       v(-1em)
+    }
+
+    // 主条目 snapshot K 到 main_state, 同时 reset 子计数器 (重新从 0 起)
+    if (count_mode == "main" and main_state != none and not isExtension) {
+      context {
+        main_state.update(envCounter.get().at(0))
+      }
     }
 
     count = context envCounter.get().at(0)
@@ -243,8 +294,12 @@
           // 单行块
           strong({
             [#env#if (uuid != "") { label(uuid) }]
-            if (count != none) [#count]
-            [：]
+            if (count_mode == "none") {
+              // 不显示号
+            } else if (count_mode == "single") {
+              context [ #envCounter.display()]
+            } else if (count != none) [#count]
+            [:]
           })
           body
         } else {
@@ -253,18 +308,37 @@
             if (not isExtension) {
               env
               context {
-                if (count == none) {
-                  let num = if (parentEntry != "") {
-                    [#counter(parentEntry).get().at(0)]
-                  } + envCounter.get().at(0)
+                if (count_mode == "main") {
+                  // 章.节.K
                   let levels = counter(heading).display()
-                  if (levels != "0.") { [#levels#num] } else { [#num] }
-                } else {count}
+                  let k = envCounter.get().at(0)
+                  if (levels != "0.") { [ #levels#k] } else { [ #k] }
+                } else if (count_mode == "sub") {
+                  // 章.节.K.j  K 从 main_state 读, j 从 sub counter 读
+                  let levels = counter(heading).display()
+                  let k = if (sub_parent_state != none) { sub_parent_state.get() } else { 0 }
+                  let j = if (subCounter != none) { subCounter.get().at(0) } else { 0 }
+                  if (levels != "0.") { [ #levels#k.#j] } else { [ #k.#j] }
+                } else if (count_mode == "single") {
+                  // 一级数字
+                  [ #envCounter.display()]
+                } else if (count_mode == "none") {
+                  // 无号
+                } else {
+                  // legacy: 原生逻辑
+                  if (count == none) {
+                    let num = if (parentEntry != "") {
+                      [#counter(parentEntry).get().at(0)]
+                    } + envCounter.get().at(0)
+                    let levels = counter(heading).display()
+                    if (levels != "0.") { [#levels#num] } else { [#num] }
+                  } else {count}
+                }
               }
-              [：]
-            } else [#v(-5pt)#line(length: 100%, stroke: 0.5pt + color_stroke)#v(-5pt)#env：]
+              [:]
+            } else [#v(-5pt)#line(length: 100%, stroke: 0.5pt + color_stroke)#v(-5pt)#env:]
             [#title_cn#if (uuid != "") { label(uuid) }]
-            if title_en != "" { "（" + title_en + "）" }
+            if title_en != "" { "(" + title_en + ")" }
           })
           v(-5pt)
           line(length: 100%, stroke: 0.5pt + color_stroke)
@@ -276,7 +350,7 @@
           bottom + right,
         )[
           #show link : set text(fill: white)
-          #text(fill: white, contributors.join("，"))
+          #text(fill: white, contributors.join(","))
         ]
       },
     )
@@ -286,7 +360,7 @@
 // 定义命令
 
 /// 约定条目。用绿色主题创建约定块
-/// - `uuid : str` <可选> 条目的唯一标识符，用于链接引用
+/// - `uuid : str` <可选> 条目的唯一标识符,用于链接引用
 
 // ============================================================
 // 5. CNL clause helpers (中英新老共用)
@@ -301,11 +375,11 @@
   }
   if (hypotheses.len() > 0) {
     if (hstyle == "display") {
-      [设：#enum(..hypotheses.map(h => [#h；]))]
+      [设:#enum(..hypotheses.map(h => [#h;]))]
     } else {
-      if (hypotheses.len() > 0) [设#hypotheses.join("，")]
+      if (hypotheses.len() > 0) [设#hypotheses.join(",")]
     }
-    [，]
+    [,]
   }
 }
 
@@ -318,7 +392,7 @@
   if (hasHyp) {
     [则]
     if (cstyle != "display") {
-      [：]
+      [:]
     }
   }
   if (cstyle == "display") {
@@ -335,7 +409,7 @@
     // 成员名
     strong({
       member.name
-      if ("name_en" in member) [（#member.name_en）]
+      if ("name_en" in member) [(#member.name_en)]
     })
     // 变量名与值
     if ("varName" in member) {
@@ -346,11 +420,11 @@
         $(#member.varName : #member.value)$
       }
     } else {
-      [：]
+      [:]
       member.value
     }
     // 分号
-    if (not ("style" in member and member.style == "display")) [；]
+    if (not ("style" in member and member.style == "display")) [;]
   }))
 }
 
@@ -361,7 +435,7 @@
   nstyle,
 ) => {
   if (notation != []) {
-    if (bstyle == "display") [记作：#notation] else [，记作：#notation]
+    if (bstyle == "display") [记作:#notation] else [,记作:#notation]
   }
   if ((notation != [] and nstyle != "display") or (notation == [] and bstyle != "display")) [。]
 }
@@ -372,25 +446,25 @@
   tstyle: "inline",
 ) => {
   if (tstyle == "display") {
-    [定义：#target]
+    [定义:#target]
   } else {
     [定义【#target】]
   }
 }
 
-/// Clause: “为” 子句（仅连接词）
+/// Clause: "为" 子句(仅连接词)
 #let ClauseBe = (bstyle: "inline") => {
-  if (bstyle == "display") [为：] else [为]
+  if (bstyle == "display") [为:] else [为]
 }
 
-/// Clause: “当且仅当” 子句（仅连接词）
+/// Clause: "当且仅当" 子句(仅连接词)
 #let ClauseIff = (bstyle: "inline") => {
-  if (bstyle == "display") [当且仅当：] else [当且仅当]
+  if (bstyle == "display") [当且仅当:] else [当且仅当]
 }
 
-/// Clause: “包含以下信息” 子句（仅连接词）
+/// Clause: "包含以下信息" 子句(仅连接词)
 #let ClauseContains = (bstyle: "display") => {
-  if (bstyle == "display") [包含以下信息：] else [包含以下信息]
+  if (bstyle == "display") [包含以下信息:] else [包含以下信息]
 }
 
 
