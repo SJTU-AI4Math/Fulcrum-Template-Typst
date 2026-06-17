@@ -352,4 +352,30 @@
 ]
 
 
+== 相伴概念: 用 `isExtension: true` 拼接两个独立条目
+
+奇置换 / 偶置换 是一对相伴概念: 表达上它们应该各自作为一个独立的条目,
+但视觉上希望后者拼接在前者的框下面, 不占用新编号。这时给后一个条目传
+`isExtension: true`:
+
+#定义条目("奇置换", "odd permutation")[
+  #定义子句(
+    条件: ([$sigma in S_n$]),
+    主体: [$sigma$ 是奇置换],
+    isPredicate: true,
+    内容: [$sigma$ 可写为奇数个对换的乘积],
+  )
+]
+#定义条目("偶置换", "even permutation", isExtension: true)[
+  #定义子句(
+    条件: ([$sigma in S_n$]),
+    主体: [$sigma$ 是偶置换],
+    isPredicate: true,
+    内容: [$sigma$ 可写为偶数个对换的乘积],
+  )
+]
+
+后一个条目不占用新编号, 与前一个合并为同一个“相伴定义”组。
+
+
 = 完

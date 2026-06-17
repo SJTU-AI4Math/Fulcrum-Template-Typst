@@ -37,6 +37,12 @@
 
 #let counterList = state("counterList", ())
 
+/// 子句中“散文连接词”的统一染色器: 深绿 #007030。
+/// 用法: 在任何 Clause* helper 渲染散文文字 (设/则/为/记作/...) 时
+///        把这段文字裹进 _meta(...), 让用户传入的实参 (主体/内容/记号/...)
+///        保持原色, 只染散文部分。
+#let _meta(body) = text(fill: rgb("#007030"), body)
+
 /// 工具函数,适配中文宋体的加粗函数
 
 // ============================================================
@@ -381,11 +387,14 @@
   }
   if (hypotheses.len() > 0) {
     if (hstyle == "display") {
-      [设:#enum(..hypotheses.map(h => [#h;]))]
+      _meta([设:]) + enum(..hypotheses.map(h => [#h#_meta([;])]))
     } else {
-      if (hypotheses.len() > 0) [设#hypotheses.join(",")]
+      if (hypotheses.len() > 0) {
+        _meta([设])
+        hypotheses.join(_meta([,]))
+      }
     }
-    [,]
+    _meta([,])
   }
 }
 
@@ -396,16 +405,16 @@
   cstyle,
 ) => {
   if (hasHyp) {
-    [则]
+    _meta([则])
     if (cstyle != "display") {
-      [:]
+      _meta([:])
     }
   }
   if (cstyle == "display") {
     conclusion
   } else {
     conclusion
-    [。]
+    _meta([。])
   }
 }
 
@@ -426,11 +435,11 @@
         $(#member.varName : #member.value)$
       }
     } else {
-      [:]
+      _meta([:])
       member.value
     }
     // 分号
-    if (not ("style" in member and member.style == "display")) [;]
+    if (not ("style" in member and member.style == "display")) { _meta([;]) }
   }))
 }
 
@@ -441,9 +450,17 @@
   nstyle,
 ) => {
   if (notation != []) {
-    if (bstyle == "display") [记作:#notation] else [,记作:#notation]
+    if (bstyle == "display") {
+      _meta([记作:])
+      notation
+    } else {
+      _meta([,记作:])
+      notation
+    }
   }
-  if ((notation != [] and nstyle != "display") or (notation == [] and bstyle != "display")) [。]
+  if ((notation != [] and nstyle != "display") or (notation == [] and bstyle != "display")) {
+    _meta([。])
+  }
 }
 
 /// Clause: 定义目标子句
@@ -452,25 +469,28 @@
   tstyle: "inline",
 ) => {
   if (tstyle == "display") {
-    [定义:#target]
+    _meta([定义:])
+    target
   } else {
-    [定义【#target】]
+    _meta([定义【])
+    target
+    _meta([】])
   }
 }
 
 /// Clause: "为" 子句(仅连接词)
 #let ClauseBe = (bstyle: "inline") => {
-  if (bstyle == "display") [为:] else [为]
+  if (bstyle == "display") { _meta([为:]) } else { _meta([为]) }
 }
 
 /// Clause: "当且仅当" 子句(仅连接词)
 #let ClauseIff = (bstyle: "inline") => {
-  if (bstyle == "display") [当且仅当:] else [当且仅当]
+  if (bstyle == "display") { _meta([当且仅当:]) } else { _meta([当且仅当]) }
 }
 
 /// Clause: "包含以下信息" 子句(仅连接词)
 #let ClauseContains = (bstyle: "display") => {
-  if (bstyle == "display") [包含以下信息:] else [包含以下信息]
+  if (bstyle == "display") { _meta([包含以下信息:]) } else { _meta([包含以下信息]) }
 }
 
 

@@ -37,6 +37,7 @@
   entry,
   mainEntryNumber,
   exampleEntryNumber,
+  _meta,
   ClauseHypotheses,
   ClauseConclusion,
   ClauseMembers,
@@ -282,9 +283,9 @@
   ClauseDefine(_format-target(主体, type), tstyle: tstyle)
   // 连接词
   if (isPredicate) {
-    [类型若以下之一成立:]
+    _meta([类型若以下之一成立:])
   } else {
-    [类型的成员为以下之一:]
+    _meta([类型的成员为以下之一:])
   }
   // 构造子列表
   enum(
@@ -349,9 +350,15 @@
   // 假设
   ClauseHypotheses(hyps, hstyle)
   // 目标
-  [定义【#主体】]
+  _meta([定义【])
+  主体
+  _meta([】])
   // 继承(在 ... 基础上)
-  if (exts.len() > 0) [在#exts.join(",")的基础上]
+  if (exts.len() > 0) {
+    _meta([在])
+    exts.join(_meta([,]))
+    _meta([的基础上])
+  }
   // 连接词
   if (isPredicate) {
     ClauseIff(bstyle: "display")
@@ -390,7 +397,11 @@
   assert(成员 != none, message: "结构实例子句: 参数 `成员` 必填")
   let hyps = _normalize-hypotheses(条件)
   ClauseHypotheses(hyps, hstyle)
-  [定义【#主体】为携带以下信息的 #类别:]
+  _meta([定义【])
+  主体
+  _meta([】为携带以下信息的])
+  类别
+  _meta([:])
   ClauseMembers(成员)
   ClauseNotation(记号, "display", nstyle)
 }
