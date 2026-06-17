@@ -70,6 +70,9 @@
   color_fill: rgb("#D6FEE0"),
   count_mode: "main",
   main_state: mainEntryNumber,
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 公理条目: 黄色框, 独立一级编号
@@ -79,6 +82,9 @@
   color_stroke: rgb("#C1C103"),
   color_fill: rgb("#FFFFAC"),
   count_mode: "single",
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 引理条目: 蓝色框, 主条目 章.节.K (共享 counter "new_main" 与 定义/定理)
@@ -89,6 +95,9 @@
   color_fill: rgb("#DAF0FF"),
   count_mode: "main",
   main_state: mainEntryNumber,
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 定理条目: 蓝色框, 主条目 章.节.K (共享 counter "new_main")
@@ -99,6 +108,9 @@
   color_fill: rgb("#DAF0FF"),
   count_mode: "main",
   main_state: mainEntryNumber,
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 推论条目: 蓝色框 (同定理/引理), 子条目 章.节.K.j (不推升主 K)
@@ -110,6 +122,9 @@
   count_mode: "sub",
   sub_parent_state: mainEntryNumber,
   sub_counter_name: "new_property_sub",
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 性质条目: 品红框, 子条目 章.节.K.j (不推升主 K)
@@ -121,6 +136,9 @@
   count_mode: "sub",
   sub_parent_state: mainEntryNumber,
   sub_counter_name: "new_property_sub",
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 注条目: 橙色 remark 风格, 不编号
@@ -131,6 +149,9 @@
   color_fill: rgb("#FFEBD2"),
   style: "remark",
   count_mode: "none",
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 例条目: 紫色框, 主条目 章.节.M (共享 counter "new_example" 与 反例)
@@ -141,6 +162,9 @@
   color_fill: rgb("#EFDFFF"),
   count_mode: "main",
   main_state: exampleEntryNumber,
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 反例条目: 红色框, 主条目 章.节.M (共享 counter "new_example")
@@ -151,6 +175,9 @@
   color_fill: rgb("#FFD6DC"),
   count_mode: "main",
   main_state: exampleEntryNumber,
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 构造条目: 灰色 proof 风格, 不编号
@@ -161,6 +188,9 @@
   color_fill: rgb("#F0F0F0"),
   style: "proof",
   count_mode: "none",
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 证明条目: 灰色 proof 风格, 不编号
@@ -171,6 +201,9 @@
   color_fill: rgb("#F0F0F0"),
   style: "proof",
   count_mode: "none",
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 /// 题目条目: 蓝色 problem 风格, 独立一级编号, 允许 number: 覆盖
@@ -181,6 +214,9 @@
   color_fill: rgb("#DAF0FF"),
   style: "problem",
   count_mode: "single",
+  colon: "：",
+  paren_open: "（",
+  paren_close: "）",
 )
 
 
@@ -283,9 +319,9 @@
   ClauseDefine(_format-target(主体, type), tstyle: tstyle)
   // 连接词
   if (isPredicate) {
-    _meta([类型若以下之一成立:])
+    _meta([类型若以下之一成立：])
   } else {
-    _meta([类型的成员为以下之一:])
+    _meta([类型的成员为以下之一：])
   }
   // 构造子列表
   enum(
@@ -356,7 +392,7 @@
   // 继承(在 ... 基础上)
   if (exts.len() > 0) {
     _meta([在])
-    exts.join(_meta([,]))
+    exts.join(_meta([，]))
     _meta([的基础上])
   }
   // 连接词
@@ -401,14 +437,50 @@
   主体
   _meta([】为携带以下信息的])
   类别
-  _meta([:])
+  _meta([：])
   ClauseMembers(成员)
   ClauseNotation(记号, "display", nstyle)
 }
 
 
 // ----------------------------------------
-// 2.5 #定理子句 - 唯一定理类子句
+// 2.5 #同义子句 - X = Y 与 Z 与 ... 的同义定义(仅含 extends, 无额外成员)
+//
+//   定义【[主体]】为同时为 [含义.join(、)] 的那些东西。
+//
+// 必填: 主体, 含义   (named)
+// 可选: 条件, 记号, *style
+//
+// 含义: 接受 单个 content/str 或 array of content/str.
+//
+// 适用: "交换幺环 = 交换环 与 幺环", "Boole 代数 = 分配格 与 余補格" 这类只靠 extends
+// 拼起来的结构, 避免 用 #结构子句 + 空成员数组 产生 "包含以下信息:" 空后续的渲染。
+// ----------------------------------------
+#let 同义子句 = (
+  主体: none,
+  含义: none,
+  条件: (),
+  记号: [],
+  hstyle: "inline",
+  nstyle: "inline",
+) => {
+  let _t = std.type
+  assert(主体 != none, message: "同义子句: 参数 `主体` 必填")
+  assert(含义 != none, message: "同义子句: 参数 `含义` 必填")
+  let hyps = _normalize-hypotheses(条件)
+  let parts = if (_t(含义) == str or _t(含义) == content) { (含义,) } else { 含义 }
+  ClauseHypotheses(hyps, hstyle)
+  _meta([定义【])
+  主体
+  _meta([】为同时为])
+  parts.join(_meta([、]))
+  _meta([的那些东西])
+  ClauseNotation(记号, "inline", nstyle)
+}
+
+
+// ----------------------------------------
+// 2.6 #定理子句 - 唯一定理类子句
 //
 //   设 [条件], 则 [结论]
 //   [结论]   (无条件时)

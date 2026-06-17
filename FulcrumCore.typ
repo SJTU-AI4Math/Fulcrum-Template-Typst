@@ -209,6 +209,10 @@
   color_fill: rgb("#DDDDDD"),
   parentEntry: "",
   style: "full",
+  // 标点设定 (默认 ASCII; CN 侧调用传中文)
+  colon: ":",
+  paren_open: "(",
+  paren_close: ")",
   // 计数模式:
   //   "legacy"  - 原生逻辑 (老命令 向后兼容). 显示 heading.display() + envCounter.
   //   "main"    - 主条目. step counter, snapshot 到 main_state, 显示 章.节.K
@@ -311,7 +315,7 @@
             } else if (count_mode == "single") {
               context [ #envCounter.display()]
             } else if (count != none) [#count]
-            [:]
+            [#colon]
           })
           body
         } else {
@@ -347,10 +351,10 @@
                   } else {count}
                 }
               }
-              [:]
-            } else [#v(-5pt)#line(length: 100%, stroke: 0.5pt + color_stroke)#v(-5pt)#env:]
+              [#colon]
+            } else [#v(-5pt)#line(length: 100%, stroke: 0.5pt + color_stroke)#v(-5pt)#env#colon]
             [#title_cn#if (uuid != "") { label(uuid) }]
-            if title_en != "" { "(" + title_en + ")" }
+            if title_en != "" { paren_open + title_en + paren_close }
           })
           v(-5pt)
           line(length: 100%, stroke: 0.5pt + color_stroke)
@@ -387,14 +391,14 @@
   }
   if (hypotheses.len() > 0) {
     if (hstyle == "display") {
-      _meta([设:]) + enum(..hypotheses.map(h => [#h#_meta([;])]))
+      _meta([设：]) + enum(..hypotheses.map(h => [#h#_meta([；])]))
     } else {
       if (hypotheses.len() > 0) {
         _meta([设])
-        hypotheses.join(_meta([,]))
+        hypotheses.join(_meta([，]))
       }
     }
-    _meta([,])
+    _meta([，])
   }
 }
 
@@ -407,7 +411,7 @@
   if (hasHyp) {
     _meta([则])
     if (cstyle != "display") {
-      _meta([:])
+      _meta([：])
     }
   }
   if (cstyle == "display") {
@@ -435,11 +439,11 @@
         $(#member.varName : #member.value)$
       }
     } else {
-      _meta([:])
+      _meta([：])
       member.value
     }
     // 分号
-    if (not ("style" in member and member.style == "display")) { _meta([;]) }
+    if (not ("style" in member and member.style == "display")) { _meta([；]) }
   }))
 }
 
@@ -451,10 +455,10 @@
 ) => {
   if (notation != []) {
     if (bstyle == "display") {
-      _meta([记作:])
+      _meta([记作：])
       notation
     } else {
-      _meta([,记作:])
+      _meta([，记作：])
       notation
     }
   }
@@ -469,7 +473,7 @@
   tstyle: "inline",
 ) => {
   if (tstyle == "display") {
-    _meta([定义:])
+    _meta([定义：])
     target
   } else {
     _meta([定义【])
@@ -480,17 +484,17 @@
 
 /// Clause: "为" 子句(仅连接词)
 #let ClauseBe = (bstyle: "inline") => {
-  if (bstyle == "display") { _meta([为:]) } else { _meta([为]) }
+  if (bstyle == "display") { _meta([为：]) } else { _meta([为]) }
 }
 
 /// Clause: "当且仅当" 子句(仅连接词)
 #let ClauseIff = (bstyle: "inline") => {
-  if (bstyle == "display") { _meta([当且仅当:]) } else { _meta([当且仅当]) }
+  if (bstyle == "display") { _meta([当且仅当：]) } else { _meta([当且仅当]) }
 }
 
 /// Clause: "包含以下信息" 子句(仅连接词)
 #let ClauseContains = (bstyle: "display") => {
-  if (bstyle == "display") { _meta([包含以下信息:]) } else { _meta([包含以下信息]) }
+  if (bstyle == "display") { _meta([包含以下信息：]) } else { _meta([包含以下信息]) }
 }
 
 
