@@ -271,10 +271,10 @@
     ClauseHypotheses(hypotheses, hstyle)
     // 目标
     [定义【#target;】]
-    if (extends != ()) [在#extends.join("，")的基础上]
     if (isPredicate) [#ClauseIff(bstyle: "display")] else [#ClauseContains(bstyle: "display")]
-    // 成员
-    ClauseMembers(members)
+    // 成员: extends 摊平为纯命题, prepend 到成员前
+    let ext_members = extends.map(e => (value: e))
+    ClauseMembers(ext_members + members)
     // 记号
     ClauseNotation(notation, "display", nstyle)
   })

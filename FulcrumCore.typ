@@ -423,27 +423,55 @@
 }
 
 /// Clause: 成员子句
+///
+/// 每条成员支持三种形态:
+///   1. 命名成员 (name + varName + value/type):
+///        **名字（en）**（var : type） := value
+///        **名字（en）**（var : value）
+///   2. 命名命题 (name + value, 无 varName):
+///        **名字（en）**：value
+///   3. 纯命题 (仅 value, 无 name): 直接渲染 value, 用于 extends 摊平
+///        value
+///
+/// 末尾标点:
+///   - style == "display": 不加 (成员自带换行)
+///   - 最后一项: 。
+///   - 其余: ；
 #let ClauseMembers = (members) => {
-  enum(..members.map(member => {
-    // 成员名
-    strong({
-      member.name
-      if ("name_en" in member) [(#member.name_en)]
-    })
+  let n = members.len()
+  enum(..members.enumerate().map(pair => {
+    let (i, member) = pair
+    let hasName = "name" in member
+    let hasVar = "varName" in member
+    let isLast = (i == n - 1)
+    // 成员名 (可选)
+    if hasName {
+      strong({
+        member.name
+        if ("name_en" in member) [（#member.name_en）]
+      })
+    }
     // 变量名与值
-    if ("varName" in member) {
+    if hasVar {
       if ("type" in member) {
-        $(#member.varName : #member.type) :=$
+        [（]
+        $#member.varName : #member.type$
+        [）]
+        $:=$
         member.value
       } else {
-        $(#member.varName : #member.value)$
+        [（]
+        $#member.varName : #member.value$
+        [）]
       }
-    } else {
-      _meta([：])
+    } else if "value" in member {
+      if hasName { _meta([：]) }
       member.value
     }
-    // 分号
-    if (not ("style" in member and member.style == "display")) { _meta([；]) }
+    // 末尾标点
+    if (not ("style" in member and member.style == "display")) {
+      if isLast { _meta([。]) } else { _meta([；]) }
+    }
   }))
 }
 
@@ -492,9 +520,9 @@
   if (bstyle == "display") { _meta([当且仅当：]) } else { _meta([当且仅当]) }
 }
 
-/// Clause: "包含以下信息" 子句(仅连接词)
+/// Clause: "包含以下成员" 子句(仅连接词)
 #let ClauseContains = (bstyle: "display") => {
-  if (bstyle == "display") { _meta([包含以下信息：]) } else { _meta([包含以下信息]) }
+  if (bstyle == "display") { _meta([包含以下成员：]) } else { _meta([包含以下成员]) }
 }
 
 

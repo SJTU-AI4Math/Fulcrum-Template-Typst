@@ -344,26 +344,35 @@
 // ----------------------------------------
 // 2.3 #结构子句 - 结构体类型定义
 //
-//   设 [条件], 定义【[主体]】(在 [继承] 的基础上) 类型包含以下信息:
-//     1. [成员名] (varName : type) := value
+//   设 [条件], 定义【[主体]】[包含以下成员 / 当且仅当]：
+//     1. [extends 父类 (摊平到第 1..k 条)]
 //     2. ...
+//     k+1. [本身的成员]
+//     ...
 //   记作 [记号]。
 //
 // 必填: 主体, 成员   (named)
 // 可选: 条件, 继承 / extends, 记号, isPredicate, *style
 //
-// 继承 反 extends 二选一 (中英文别名, 都接受 单个 content/str 或 array):
-//   #结构子句(extends: 半群, ...)        // 单个父类
-//   #结构子句(extends: (半群, 集合), ...) // 多个父类
-//   #结构子句(继承: 半群, ...)         // 中文别名
+// extends 反 继承 二选一 (中英文别名, 都接受 单个 content/str 或 array):
+//   #结构子句(extends: [#半群], ...)              // 单个父类
+//   #结构子句(extends: ([#半群], [#集合]), ...)   // 多个父类
+//   #结构子句(继承: [#半群], ...)                 // 中文别名
+//
+// 渲染时, extends 的每一项会作为一条 "纯命题成员" prepend 到 成员 列表最前,
+// 然后用 ClauseMembers 统一渲染为 numbered list, 不再走 "在 ... 基础上" 的额外语句。
 //
 // 成员: array, 每条字典:
-//   (name, name_en?, varName?, type?, value?, style?)
+//   (name?, name_en?, varName?, type?, value, style?)
 //
-// 渲染规则(继承自旧 ClauseMembers):
-//   - 有 varName + value (不传 type) → "(varName : value)"
-//   - 有 varName + type (+ value) → "(varName : type) := value"
-//   - 仅 value(无 varName) → ": value"
+//   - 含 name + value: **名字**：value
+//   - 含 name + varName + type + value: **名字** (var : type) := value
+//   - 含 name + varName + value: **名字** (var : value)
+//   - 仅 value (无 name): 纯命题, 直接渲染 value (extends 摊平用)
+//
+// isPredicate 控制连接词:
+//   - true  → "当且仅当"  (主体是命题, 例如 "X 是群")
+//   - false → "包含以下成员" (主体是 结构数据 / 类型, 例如 "群")
 // ----------------------------------------
 #let 结构子句 = (
   主体: none,
@@ -382,27 +391,25 @@
   let hyps = _normalize-hypotheses(条件)
   // 优先 extends, fallback 到 继承 (允许中英文双参数)
   let ext_raw = if (extends != none) { extends } else { 继承 }
-  let exts = if (_t(ext_raw) == str or _t(ext_raw) == content) { (ext_raw,) } else { ext_raw }
+  let exts = if (ext_raw == none or ext_raw == ()) { () } else if (_t(ext_raw) == str or _t(ext_raw) == content) { (ext_raw,) } else { ext_raw }
+  // 将 extends 摊平为纯命题成员, prepend 到成员列表
+  let ext_members = exts.map(e => (value: e))
+  let all_members = ext_members + 成员
+  assert(all_members.len() > 0, message: "结构子句: `成员` 与 `extends` 不能同时为空")
   // 假设
   ClauseHypotheses(hyps, hstyle)
   // 目标
   _meta([定义【])
   主体
   _meta([】])
-  // 继承(在 ... 基础上)
-  if (exts.len() > 0) {
-    _meta([在])
-    exts.join(_meta([，]))
-    _meta([的基础上])
-  }
   // 连接词
   if (isPredicate) {
     ClauseIff(bstyle: "display")
   } else {
     ClauseContains(bstyle: "display")
   }
-  // 成员
-  ClauseMembers(成员)
+  // 成员 (extends 已摊平到前)
+  ClauseMembers(all_members)
   // 记号
   ClauseNotation(记号, "display", nstyle)
 }
@@ -444,39 +451,14 @@
 
 
 // ----------------------------------------
-// 2.5 #同义子句 - X = Y 与 Z 与 ... 的同义定义(仅含 extends, 无额外成员)
-//
-//   定义【[主体]】为同时为 [含义.join(、)] 的那些东西。
-//
-// 必填: 主体, 含义   (named)
-// 可选: 条件, 记号, *style
-//
-// 含义: 接受 单个 content/str 或 array of content/str.
-//
-// 适用: "交换幺环 = 交换环 与 幺环", "Boole 代数 = 分配格 与 余補格" 这类只靠 extends
-// 拼起来的结构, 避免 用 #结构子句 + 空成员数组 产生 "包含以下信息:" 空后续的渲染。
+// (#同义子句 已废弃 2026-06-18: 合并到 #结构子句)
+// 之前 "X = Y 与 Z 的同义定义" 走 #同义子句, 现统一写法:
+//   #结构子句(主体: [#交换幺环], extends: ([#交换环], [#幺环]), 成员: ())
+// extends 会摊平为 numbered list 的前两条:
+//   定义【交换幺环】包含以下成员：
+//     1. 交换环；
+//     2. 幺环。
 // ----------------------------------------
-#let 同义子句 = (
-  主体: none,
-  含义: none,
-  条件: (),
-  记号: [],
-  hstyle: "inline",
-  nstyle: "inline",
-) => {
-  let _t = std.type
-  assert(主体 != none, message: "同义子句: 参数 `主体` 必填")
-  assert(含义 != none, message: "同义子句: 参数 `含义` 必填")
-  let hyps = _normalize-hypotheses(条件)
-  let parts = if (_t(含义) == str or _t(含义) == content) { (含义,) } else { 含义 }
-  ClauseHypotheses(hyps, hstyle)
-  _meta([定义【])
-  主体
-  _meta([】为同时为])
-  parts.join(_meta([、]))
-  _meta([的那些东西])
-  ClauseNotation(记号, "inline", nstyle)
-}
 
 
 // ----------------------------------------
