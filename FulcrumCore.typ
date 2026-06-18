@@ -511,13 +511,19 @@
 }
 
 /// Clause: "为" 子句(仅连接词)
+///
+/// inline 模式末尾追加一个普通空格 (而非 ~), 让中文 + 数学/英文之间有正常间距。
+/// 文本 + 文本之间作者会自己处理 (用全角句末标点 / 中文紧贴), 这里只保护 后面接 $...$ / Latin 字母 的边界。
 #let ClauseBe = (bstyle: "inline") => {
-  if (bstyle == "display") { _meta([为：]) } else { _meta([为]) }
+  if (bstyle == "display") { _meta([为：]) } else { _meta([为]) + " " }
 }
 
 /// Clause: "当且仅当" 子句(仅连接词)
+///
+/// 同 ClauseBe: inline 模式追加一个空格, 让 "当且仅当" 和后面的 $...$ / 拉丁字母 之间有间距。
+/// (display 模式以 ：换行, 已自然分隔, 不加空格。)
 #let ClauseIff = (bstyle: "inline") => {
-  if (bstyle == "display") { _meta([当且仅当：]) } else { _meta([当且仅当]) }
+  if (bstyle == "display") { _meta([当且仅当：]) } else { _meta([当且仅当]) + " " }
 }
 
 /// Clause: "包含以下成员" 子句(仅连接词)
