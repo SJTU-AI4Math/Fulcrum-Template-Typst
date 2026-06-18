@@ -50,7 +50,7 @@
 // ============================================================
 
 #let ApplyBold = (body) => {
-  set text(font: ("New Computer Modern", "SimHei"), weight: "bold")
+  set text(font: ("New Computer Modern", "SimHei", "Noto Sans CJK SC"), weight: "bold")
   body
 }
 
@@ -81,7 +81,7 @@
     it
   }
   // 字体样式:西文使用 New Computer Modern,中文使用宋体
-  set text(font: ("New Computer Modern", "SimSun"))
+  set text(font: ("New Computer Modern", "SimSun", "Noto Serif CJK SC"))
   // 首行缩进两个字符宽度
   set par(first-line-indent: (amount: 2em, all: true),)
   // 有序枚举缩进两个字符宽度
@@ -97,7 +97,7 @@
   // 普通加粗
   show strong: ApplyBold
   // 中文斜体:楷体
-  show emph: set text(font: ("KaiTi", "New Computer Modern Math"), style: "italic")
+  show emph: set text(font: ("KaiTi", "Noto Serif CJK SC", "New Computer Modern Math"), style: "italic")
   // 超链接样式:深蓝色
   show link: set text(weight: "regular", fill: rgb("#000080"))
   // 代码块
@@ -107,7 +107,7 @@
     if (body.lang in rawLangColorMap){
       langColor = rawLangColorMap.at(body.lang)
     }
-    set text(font: ("Consolas", "SimHei"))
+    set text(font: ("Consolas", "SimHei", "Noto Sans CJK SC"))
     block(
       fill: rgb("#FFFFFF"),
       inset: 8pt,
@@ -123,7 +123,7 @@
   }
   // 行内代码块
   show raw.where(block: false): (body) => {
-    set text(font: ("Consolas", "SimHei"))
+    set text(font: ("Consolas", "SimHei", "Noto Sans CJK SC"))
     box(
       fill: rgb("#EEEEEE"),
       inset: 4pt,
